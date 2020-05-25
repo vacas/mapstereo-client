@@ -1,0 +1,65 @@
+// const webpack = require('webpack');
+const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+
+module.exports = {
+  entry: './src/index.tsx',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: '[name].bundle.js',
+    publicPath: '/',
+  },
+  module: {
+    rules: [
+      { 
+        test: /\.tsx?$/,
+        exclude: /node_modules/,
+        loader: 'babel-loader',
+      },
+      {
+        test: /\.css$/,
+        use: [
+            'style-loader',
+            'css-loader',
+        ],
+      },
+      {
+        test: /\.(png|svg|jpg|jpeg|gif|ico)$/,
+        exclude: /node_modules/,
+        use: ['file-loader?name=[name].[ext]']
+      }
+    ],
+  },
+  plugins: [
+    new MiniCssExtractPlugin(),
+    new HtmlWebpackPlugin({
+      template: path.join(__dirname, './public/index.html'),
+      filename: 'index.html'
+    })
+  ],
+  resolve: {
+    extensions: [ '.tsx', '.ts', '.js', '.jsx', '.webpack.js', '.json' ],
+    modules: [
+      path.resolve(__dirname, 'src'),
+      'node_modules',
+    ]
+  },
+  devtool: 'source-map',
+  devServer: {
+    hot: true,
+    watchContentBase: true,
+    historyApiFallback: true,
+    disableHostCheck: true,
+    contentBase: '.',
+    port: 3000,
+    // compress: true,
+    watchOptions: {
+      ignored: [
+          path.resolve(__dirname, 'dist'),
+          path.resolve(__dirname, 'node_modules'),
+          // path.resolve(__dirname, 'src/**/*.spec.ts')
+      ]
+  }
+  },
+};

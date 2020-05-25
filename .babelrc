@@ -1,0 +1,25 @@
+{
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "modules": false,
+        // "useBuiltIns": "usage",
+        "targets": {
+          "browsers": [
+            ">0.25%",
+            "not op_mini all"
+          ]
+        }
+      }
+    ],
+    "@babel/preset-react",
+    "@babel/preset-typescript"
+  ],
+  "plugins": [
+    // "@babel/plugin-transform-arrow-functions",
+    // "transform-object-rest-spread",
+    "@babel/plugin-proposal-object-rest-spread"
+    // "transform-class-properties"
+  ]
+}
