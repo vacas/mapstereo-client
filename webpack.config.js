@@ -53,12 +53,10 @@ module.exports = {
     disableHostCheck: true,
     contentBase: '.',
     port: 3000,
-    // compress: true,
     watchOptions: {
       ignored: [
           path.resolve(__dirname, 'dist'),
           path.resolve(__dirname, 'node_modules'),
-          // path.resolve(__dirname, 'src/**/*.spec.ts')
       ]
   }
   },

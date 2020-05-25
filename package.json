@@ -18,8 +18,10 @@
     "@types/react-dom": "^16.9.0",
     "babel-polyfill": "^6.26.0",
     "es7-object-polyfill": "^1.0.1",
+    "immutability-helper": "^3.0.2",
     "react": "^16.13.1",
     "react-dnd": "^11.0.0",
+    "react-dnd-html5-backend": "^11.0.0",
     "react-dom": "^16.13.1",
     "react-scripts": "3.4.1"
   },
