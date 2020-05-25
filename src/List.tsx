@@ -1,46 +1,67 @@
-import React, { useState, useCallback } from 'react'
-import Box from './Box';
+import React, { useState, useCallback, Dispatch, SetStateAction, useEffect } from 'react'
+import { Card } from './Card'
 import update from 'immutability-helper'
 
 const style = {
   width: 400,
 }
-const DEFAULT_POSITION = {
-  top: 180,
-  left: 20,
+
+export interface Item {
+  id: number
+  text: string
 }
 
+export interface ListState {
+  cards: Item[]
+}
 
-const List = () => {
-  {
-    const [cards, setCards] = useState([
-      {
-        id: 1,
-        text: 'Write a cool JS library',
-      },
-      {
-        id: 2,
-        text: 'Make it generic enough',
-      },
-      {
-        id: 3,
-        text: 'Write README',
-      },
-      {
-        id: 4,
-        text: 'Create some examples',
-      },
-      {
-        id: 6,
-        text: '???',
-      },
-      {
-        id: 7,
-        text: 'PROFIT',
-      },
-    ])
+export interface Props {
+  drop?: any;
+  children?: React.ReactChild;
+  setLists?: Dispatch<SetStateAction<Array<any>>>;
+  lists?: Array<any>;
+  listId?: number;
+  boxId?: number;
+}
+
+const List: React.FC = ({ drop, children, lists, listId, setLists, boxId }: Props) => {
+    const listData = lists && lists.length > 0 && lists.find(list => list.id === listId);
+    const { list } = listData || {};
+    const [cards, setCards] = useState(list || []);
+
+    useEffect(() => {
+      if (!lists || lists.length === 0) {        
+        setLists([
+          {
+            id: listId,
+            boxId,
+            list: cards
+          }
+        ]);
+      }
+
+      console.log(listData);
+      
+
+      if (!listData || !list || list.length !== cards.length || (listData.id === listId && JSON.stringify(list.map(l => l.id)) !== JSON.stringify(cards.map(c => c.id)))) {
+        const newList = lists.map(listItem => {
+          if (listItem.id && listId) {
+            return {
+              ...listItem,
+              list: cards
+            }
+          }
+
+          return listItem;
+        });
+
+        setLists(newList);
+      }
+      
+    }, [cards]);
+
     const moveCard = useCallback(
-      (dragIndex, hoverIndex) => {
+      (dragIndex: number, hoverIndex: number) => {
         const dragCard = cards[dragIndex]
         setCards(
           update(cards, {
@@ -53,25 +74,35 @@ const List = () => {
       },
       [cards],
     )
-    const renderCard = (card, index) => {
+
+    const renderCard = (card: { id: number; text: string }, index: number) => {
       return (
-        <Box
+        <Card
           key={card.id}
           index={index}
           id={card.id}
+          text={card.text}
           moveCard={moveCard}
-          {...DEFAULT_POSITION}
-        >
-          {card.text}
-        </Box>
+        />
       )
     }
+
     return (
-      <>
+      <div ref={drop}>
+        <button onClick={() => {
+          const id = cards.length + 1;
+          setCards([
+            ...cards,
+            {
+              id,
+              text: `Card Item #${id}`
+            }
+          ])
+        }}>Add list item</button>
         <div style={style}>{cards.map((card, i) => renderCard(card, i))}</div>
-      </>
+        <div>{children}</div>
+      </div>
     )
-  }
 }
 
 export default List;

@@ -32,7 +32,7 @@ module.exports = {
     ],
   },
   plugins: [
-    new MiniCssExtractPlugin(),
+    // new MiniCssExtractPlugin(),
     new HtmlWebpackPlugin({
       template: path.join(__dirname, './public/index.html'),
       filename: 'index.html'
@@ -45,7 +45,7 @@ module.exports = {
       'node_modules',
     ]
   },
-  devtool: 'source-map',
+  // devtool: 'source-map',
   devServer: {
     hot: true,
     watchContentBase: true,

@@ -12,7 +12,7 @@ const styles = {
   position: 'relative',
 }
 
-const Container = ({ setBoxes, boxes }) => {
+const Container = ({ setBoxes, boxes, setLists, lists }) => {
   const [, drop] = useDrop({
     accept: ItemTypes.BOX,
     drop(item: any, monitor) {
@@ -22,25 +22,46 @@ const Container = ({ setBoxes, boxes }) => {
       moveBox(item.id, left, top)
       return undefined
     },
-  })
+  });
+
   const moveBox = (id, left, top) => {
     setBoxes(
       update(boxes, {
-        [id]: {
-          $merge: { left, top },
-        },
+        $set: ([
+          ...boxes.map(box => {
+            if (box.id === id) {              
+              return {...box, left, top }
+            }
+
+            return box;
+          }),
+        ])
       }),
     )
   }
   return (
     <div ref={drop} style={styles as React.CSSProperties}>
-      <List />
-      {Object.keys(boxes).map((key) => {
-        const { left, top, title } = boxes[key]
+      {boxes.map((box) => {
+        const { left, top, title, Component, listId, id, boxId } = box
+        
+        if (Component) {
+          return (
+            <Box
+              key={id}
+              id={id}
+              left={left}
+              top={top}
+            >
+              {title}
+              <Component setLists={setLists} lists={lists} listId={listId} boxId={boxId} />
+            </Box>
+          )
+        }
+
         return (
           <Box
-            key={key}
-            id={key}
+            key={id}
+            id={id}
             left={left}
             top={top}
           >
