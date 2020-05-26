@@ -15,6 +15,9 @@ export interface CardProps {
   id: any
   text: string
   index: number
+  listId: number;
+  left?: number;
+  top?: number;
   moveCard: (dragIndex: number, hoverIndex: number) => void
 }
 
@@ -23,7 +26,7 @@ interface DragItem {
   id: string
   type: string
 }
-export const Card: React.FC<CardProps> = ({ id, text, index, moveCard }) => {
+export const Card: React.FC<CardProps> = ({ id, text, index, listId, moveCard, left, top }) => {
   const ref = useRef<HTMLDivElement>(null)
   const [, drop] = useDrop({
     accept: ItemTypes.CARD,
@@ -79,7 +82,7 @@ export const Card: React.FC<CardProps> = ({ id, text, index, moveCard }) => {
 
   const [{ isDragging }, drag] = useDrag({
     // TODO: ADD BOXID
-    item: { type: ItemTypes.CARD, id, index },
+    item: { type: ItemTypes.CARD, id, index, listId, text, top, left  },
     collect: (monitor: any) => ({
       isDragging: monitor.isDragging(),
     }),

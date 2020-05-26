@@ -25,16 +25,15 @@ export interface Props {
   listId?: number;
   boxId?: number;
   setBoxes?: Dispatch<SetStateAction<Array<any>>>;
-  boxes?: Array<any>
+  boxes?: Array<any>;
+  left?: number;
+  top?: number;
 }
 
-const List: React.FC = ({ children, lists, listId, setLists, boxId, boxes, setBoxes }: Props) => {
+const List: React.FC = ({ children, lists, listId, setLists, boxId, boxes, setBoxes, left, top }: Props) => {
     const listData = lists && lists.length > 0 && lists.find(list => list.id === listId);
     const { list } = listData || {};
     const [cards, setCards] = useState(list || []);
-
-    // console.log('cards', cards);
-    
 
     const [, dropBox] = useDrop({
       accept: ItemTypes.BOX,
@@ -47,7 +46,7 @@ const List: React.FC = ({ children, lists, listId, setLists, boxId, boxes, setBo
             {
               id: cards.length + 1,
               text: `box #${item.id}`,
-              boxId
+              listId
             }
           ]);
   
@@ -103,14 +102,17 @@ const List: React.FC = ({ children, lists, listId, setLists, boxId, boxes, setBo
       [cards],
     )
 
-    const renderCard = (card: { id: number; text: string }, index: number) => {
+    const renderCard = (card: { id: number; text: string, listId: number }, index: number) => {
       return (
         <Card
+          left={left}
+          top={top}
           key={card.id}
           index={index}
           id={card.id}
           text={card.text}
           moveCard={moveCard}
+          listId={listId}
         />
       )
     }
@@ -124,7 +126,7 @@ const List: React.FC = ({ children, lists, listId, setLists, boxId, boxes, setBo
             {
               id,
               text: `Card Item #${id}`,
-              boxId
+              listId
             }
           ])
         }}>Add list item</button>

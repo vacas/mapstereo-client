@@ -1,6 +1,7 @@
 import React from 'react'
 import { useDrag } from 'react-dnd'
 import { ItemTypes } from './ItemTypes'
+
 const style = {
   position: 'absolute',
   border: '1px dashed gray',
@@ -8,10 +9,18 @@ const style = {
   padding: '0.5rem 1rem',
   cursor: 'move',
 }
-const Box = ({ id, left, top, children }) => {
+
+interface Props {
+  id: number;
+  left?: number;
+  top?: number;
+  children?: React.ReactChild;
+  isList?: boolean;
+}
+
+const Box = ({ id, left, top, children, isList }: Props) => {
   const [{ isDragging }, drag] = useDrag({
-    // TODO: ADD LIST TYPE / ALTERNATIVELY, MAKE A LIST TYPE
-    item: { id, left, top, type: ItemTypes.BOX },
+    item: { id, left, top, type: isList ? ItemTypes.LIST : ItemTypes.BOX },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),

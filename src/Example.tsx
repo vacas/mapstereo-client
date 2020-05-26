@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Container from './Container';
 import List from './List';
 
@@ -16,6 +16,8 @@ const LIST_DEFAULT_POSITION = {
 const Example = () => {
   const [boxes, setBoxes] = useState([]);
   const [lists, setLists] = useState([]);
+
+  useEffect(() => {}, [lists]);
 
   return (
     <div style={{

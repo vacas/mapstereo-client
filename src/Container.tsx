@@ -14,9 +14,9 @@ const styles = {
 
 const Container = ({ setBoxes, boxes, setLists, lists }) => {
   const [, drop] = useDrop({
-    accept: [ItemTypes.BOX, ItemTypes.CARD],
+    accept: [ItemTypes.BOX, ItemTypes.CARD, ItemTypes.LIST],
     drop(item: any, monitor) {
-      if (item.type === 'box') {
+      if (item.type === 'box' || item.type === 'list') {
         const delta = monitor.getDifferenceFromInitialOffset();
   
         if (delta) {
@@ -28,11 +28,34 @@ const Container = ({ setBoxes, boxes, setLists, lists }) => {
 
       if (item.type === 'card') {
         const delta = monitor.getDifferenceFromInitialOffset();
-  
-        console.log(item);
+        const newList = lists.map(listData => {
+          if (listData.id === item.listId) {
+            return {
+              ...listData,
+              list: listData.list.filter(listItem => listItem.id !== item.id),
+            }
+          }
 
-        console.log(delta);
-        
+          return listData;
+        })
+
+        if (newList) {
+          setLists(newList)
+        }
+
+        if (delta) {
+          const left = Math.round(item.left + delta.x)
+          const top = Math.round(item.top + delta.y)
+          setBoxes([
+            ...boxes,
+            {
+              id: boxes.length + 1,
+              title: item.text,
+              left,
+              top
+            }
+          ]);
+        }
       }
 
       return undefined
@@ -66,9 +89,21 @@ const Container = ({ setBoxes, boxes, setLists, lists }) => {
               id={id}
               left={left}
               top={top}
+              isList
             >
-              {title}
-              <Component setLists={setLists} lists={lists} listId={listId} boxId={id} setBoxes={setBoxes} boxes={boxes} />
+              <React.Fragment>
+                {title}
+                <Component 
+                  setLists={setLists} 
+                  lists={lists} 
+                  listId={listId} 
+                  boxId={id}
+                  left={left}
+                  top={top}
+                  setBoxes={setBoxes} 
+                  boxes={boxes} 
+                />
+              </React.Fragment>
             </Box>
           )
         }
