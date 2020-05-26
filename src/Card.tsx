@@ -78,6 +78,7 @@ export const Card: React.FC<CardProps> = ({ id, text, index, moveCard }) => {
   })
 
   const [{ isDragging }, drag] = useDrag({
+    // TODO: ADD BOXID
     item: { type: ItemTypes.CARD, id, index },
     collect: (monitor: any) => ({
       isDragging: monitor.isDragging(),

@@ -1,6 +1,8 @@
-import React, { useState, useCallback, Dispatch, SetStateAction, useEffect } from 'react'
-import { Card } from './Card'
-import update from 'immutability-helper'
+import React, { useState, useCallback, Dispatch, SetStateAction, useEffect } from 'react';
+import { useDrop } from 'react-dnd';
+import { Card } from './Card';
+import update from 'immutability-helper';
+import { ItemTypes } from './ItemTypes';
 
 const style = {
   width: 400,
@@ -22,12 +24,41 @@ export interface Props {
   lists?: Array<any>;
   listId?: number;
   boxId?: number;
+  setBoxes?: Dispatch<SetStateAction<Array<any>>>;
+  boxes?: Array<any>
 }
 
-const List: React.FC = ({ drop, children, lists, listId, setLists, boxId }: Props) => {
+const List: React.FC = ({ children, lists, listId, setLists, boxId, boxes, setBoxes }: Props) => {
     const listData = lists && lists.length > 0 && lists.find(list => list.id === listId);
     const { list } = listData || {};
     const [cards, setCards] = useState(list || []);
+
+    // console.log('cards', cards);
+    
+
+    const [, dropBox] = useDrop({
+      accept: ItemTypes.BOX,
+      drop(item: any, monitor) {
+        console.log(item);
+        
+        if (!item.Component) {
+          setCards([
+            ...cards,
+            {
+              id: cards.length + 1,
+              text: `box #${item.id}`,
+              boxId
+            }
+          ]);
+  
+          setBoxes([
+            ...boxes.filter(box => box.id !== item.id)
+          ]);
+        }
+
+        return undefined
+      },
+    });
 
     useEffect(() => {
       if (!lists || lists.length === 0) {        
@@ -40,12 +71,9 @@ const List: React.FC = ({ drop, children, lists, listId, setLists, boxId }: Prop
         ]);
       }
 
-      console.log(listData);
-      
-
       if (!listData || !list || list.length !== cards.length || (listData.id === listId && JSON.stringify(list.map(l => l.id)) !== JSON.stringify(cards.map(c => c.id)))) {
         const newList = lists.map(listItem => {
-          if (listItem.id && listId) {
+          if (listItem.id === listId) {
             return {
               ...listItem,
               list: cards
@@ -88,14 +116,15 @@ const List: React.FC = ({ drop, children, lists, listId, setLists, boxId }: Prop
     }
 
     return (
-      <div ref={drop}>
+      <div ref={dropBox}>
         <button onClick={() => {
           const id = cards.length + 1;
           setCards([
             ...cards,
             {
               id,
-              text: `Card Item #${id}`
+              text: `Card Item #${id}`,
+              boxId
             }
           ])
         }}>Add list item</button>

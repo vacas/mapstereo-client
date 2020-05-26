@@ -10,6 +10,7 @@ const style = {
 }
 const Box = ({ id, left, top, children }) => {
   const [{ isDragging }, drag] = useDrag({
+    // TODO: ADD LIST TYPE / ALTERNATIVELY, MAKE A LIST TYPE
     item: { id, left, top, type: ItemTypes.BOX },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),

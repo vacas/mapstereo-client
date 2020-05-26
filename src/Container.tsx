@@ -14,12 +14,27 @@ const styles = {
 
 const Container = ({ setBoxes, boxes, setLists, lists }) => {
   const [, drop] = useDrop({
-    accept: ItemTypes.BOX,
+    accept: [ItemTypes.BOX, ItemTypes.CARD],
     drop(item: any, monitor) {
-      const delta = monitor.getDifferenceFromInitialOffset()
-      const left = Math.round(item.left + delta.x)
-      const top = Math.round(item.top + delta.y)
-      moveBox(item.id, left, top)
+      if (item.type === 'box') {
+        const delta = monitor.getDifferenceFromInitialOffset();
+  
+        if (delta) {
+          const left = Math.round(item.left + delta.x)
+          const top = Math.round(item.top + delta.y)
+          moveBox(item.id, left, top)
+        }
+      }
+
+      if (item.type === 'card') {
+        const delta = monitor.getDifferenceFromInitialOffset();
+  
+        console.log(item);
+
+        console.log(delta);
+        
+      }
+
       return undefined
     },
   });
@@ -42,7 +57,7 @@ const Container = ({ setBoxes, boxes, setLists, lists }) => {
   return (
     <div ref={drop} style={styles as React.CSSProperties}>
       {boxes.map((box) => {
-        const { left, top, title, Component, listId, id, boxId } = box
+        const { left, top, title, Component, listId, id } = box
         
         if (Component) {
           return (
@@ -53,7 +68,7 @@ const Container = ({ setBoxes, boxes, setLists, lists }) => {
               top={top}
             >
               {title}
-              <Component setLists={setLists} lists={lists} listId={listId} boxId={boxId} />
+              <Component setLists={setLists} lists={lists} listId={listId} boxId={id} setBoxes={setBoxes} boxes={boxes} />
             </Box>
           )
         }
