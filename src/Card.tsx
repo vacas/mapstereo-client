@@ -9,6 +9,7 @@ const style = {
   marginBottom: '.5rem',
   backgroundColor: 'white',
   cursor: 'move',
+  zIndex: 4,
 }
 
 export interface CardProps {
@@ -18,7 +19,8 @@ export interface CardProps {
   listId: number;
   left?: number;
   top?: number;
-  moveCard: (dragIndex: number, hoverIndex: number) => void
+  moveCard: (dragIndex: number, hoverIndex: number, listId: number, lists: Array<any>) => void;
+  lists: Array<any>;
 }
 
 interface DragItem {
@@ -26,7 +28,7 @@ interface DragItem {
   id: string
   type: string
 }
-export const Card: React.FC<CardProps> = ({ id, text, index, listId, moveCard, left, top }) => {
+export const Card: React.FC<CardProps> = ({ id, text, index, listId, moveCard, left, top, lists }) => {
   const ref = useRef<HTMLDivElement>(null)
   const [, drop] = useDrop({
     accept: ItemTypes.CARD,
@@ -70,7 +72,7 @@ export const Card: React.FC<CardProps> = ({ id, text, index, listId, moveCard, l
       }
 
       // Time to actually perform the action
-      moveCard(dragIndex, hoverIndex)
+      moveCard(dragIndex, hoverIndex, listId, lists)
 
       // Note: we're mutating the monitor item here!
       // Generally it's better to avoid mutations,

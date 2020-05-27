@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import update from 'immutability-helper';
 import Container from './Container';
 import List from './List';
 
@@ -17,7 +18,49 @@ const Example = () => {
   const [boxes, setBoxes] = useState([]);
   const [lists, setLists] = useState([]);
 
-  useEffect(() => {}, [lists]);
+  // useEffect(() => {}, [lists]);
+
+  const moveCard = useCallback(
+    (dragIndex: number, hoverIndex: number, listId: number, lists: Array<any>) => {
+      const listData = lists && lists.length > 0 && lists.find(list => list.id === listId);
+      const dragCard = listData.list[dragIndex]
+
+      console.log(lists);
+
+      const newList = lists.map(list => {
+        if (list.id === listId) {
+          const reorganizedListItems = update(list.list, {
+            $splice: [
+              [dragIndex, 1],
+              [hoverIndex, 0, dragCard],
+            ],
+          });
+
+          console.log();
+          
+
+          return {
+            ...list,
+            list: reorganizedListItems,
+          };
+        }
+
+        return list;
+      });
+
+      console.log(newList);
+
+      // const reorganizedListItems = {
+      //   update(listData, {
+      //     $splice: [
+      //       [dragIndex, 1],
+      //       [hoverIndex, 0, dragCard],
+      //     ],
+      //   }),
+      // }
+      setLists(newList)
+    },[lists]
+  )
 
   return (
     <div style={{
@@ -65,6 +108,7 @@ const Example = () => {
             ...LIST_DEFAULT_POSITION,
             listId,
             Component: List,
+            moveCard,
           },
         ])
       }}>Add List</button>

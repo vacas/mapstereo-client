@@ -1,15 +1,19 @@
-// const webpack = require('webpack');
+const webpack = require('webpack');
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = {
-  entry: './src/index.tsx',
+  entry: {
+    app: ['./src/index.tsx'],
+    vendor: ['react', 'react-dom']
+},
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name].bundle.js',
     publicPath: '/',
   },
+  devtool: 'source-map',
   module: {
     rules: [
       { 
@@ -32,7 +36,11 @@ module.exports = {
     ],
   },
   plugins: [
-    // new MiniCssExtractPlugin(),
+    new MiniCssExtractPlugin(),
+    new webpack.LoaderOptionsPlugin({
+      minimize: true,
+      debug: false,
+    }),
     new HtmlWebpackPlugin({
       template: path.join(__dirname, './public/index.html'),
       filename: 'index.html'
@@ -48,7 +56,7 @@ module.exports = {
   // devtool: 'source-map',
   devServer: {
     hot: true,
-    watchContentBase: true,
+    // watchContentBase: true,
     historyApiFallback: true,
     disableHostCheck: true,
     contentBase: '.',

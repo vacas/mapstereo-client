@@ -1,11 +1,12 @@
 import React, { useState, useCallback, Dispatch, SetStateAction, useEffect } from 'react';
 import { useDrop } from 'react-dnd';
 import { Card } from './Card';
-import update from 'immutability-helper';
 import { ItemTypes } from './ItemTypes';
+import { sortById } from './helper';
 
 const style = {
   width: 400,
+  zIndex: 3,
 }
 
 export interface Item {
@@ -23,32 +24,48 @@ export interface Props {
   setLists?: Dispatch<SetStateAction<Array<any>>>;
   lists?: Array<any>;
   listId?: number;
-  boxId?: number;
   setBoxes?: Dispatch<SetStateAction<Array<any>>>;
   boxes?: Array<any>;
   left?: number;
   top?: number;
+  moveCard?: (dragIndex: number, hoverIndex: number, listId: number, lists: Array<any>) => void;
 }
 
-const List: React.FC = ({ children, lists, listId, setLists, boxId, boxes, setBoxes, left, top }: Props) => {
+const List: React.FC = ({ children, lists, listId, setLists, boxes, setBoxes, left, top, moveCard }: Props) => {
     const listData = lists && lists.length > 0 && lists.find(list => list.id === listId);
-    const { list } = listData || {};
-    const [cards, setCards] = useState(list || []);
+    const { list = [] } = listData || {};
+    console.log('list right when I get the list: ', list);
+    
+    // const [cards, setCards] = useState(list || []);
 
     const [, dropBox] = useDrop({
       accept: ItemTypes.BOX,
       drop(item: any, monitor) {
-        console.log(item);
-        
         if (!item.Component) {
-          setCards([
-            ...cards,
-            {
-              id: cards.length + 1,
-              text: `box #${item.id}`,
-              listId
+          const newId = list.length === 0 ? 0 : list.sort(sortById).reverse()[0].id + 1;
+          const newList = lists.map(list => {
+            if (list.id === listId) {
+              return {
+                // this naming convesion (lists, lists.list, lists.list.list) is confusing, need to rename to listItems, instead
+                ...list,
+                list: [
+                  ...list.list,
+                  {
+                    id: newId,
+                    text: `Card Item #${newId}`,
+                    listId
+                  }
+                ],
+              }
             }
-          ]);
+
+            return list;
+          })
+
+          console.log('newList in dropBox', newList);
+          
+
+          setLists(newList);
   
           setBoxes([
             ...boxes.filter(box => box.id !== item.id)
@@ -59,50 +76,52 @@ const List: React.FC = ({ children, lists, listId, setLists, boxId, boxes, setBo
       },
     });
 
-    useEffect(() => {
-      if (!lists || lists.length === 0) {        
-        setLists([
-          {
-            id: listId,
-            boxId,
-            list: cards
-          }
-        ]);
-      }
+    // useEffect(() => {
+    //   if (!lists || lists.length === 0) {        
+    //     setLists([
+    //       {
+    //         id: listId,
+    //         boxId,
+    //         list: cards
+    //       }
+    //     ]);
+    //   }
 
-      if (!listData || !list || list.length !== cards.length || (listData.id === listId && JSON.stringify(list.map(l => l.id)) !== JSON.stringify(cards.map(c => c.id)))) {
-        const newList = lists.map(listItem => {
-          if (listItem.id === listId) {
-            return {
-              ...listItem,
-              list: cards
-            }
-          }
+    //   if (!listData || !list || list.length !== cards.length || (listData.id === listId && JSON.stringify(list.map(l => l.id)) !== JSON.stringify(cards.map(c => c.id)))) {
+    //     const newList = lists.map(listItem => {
+    //       if (listItem.id === listId) {
+    //         return {
+    //           ...listItem,
+    //           list: cards
+    //         }
+    //       }
 
-          return listItem;
-        });
+    //       return listItem;
+    //     });
 
-        setLists(newList);
-      }
+    //     setLists(newList);
+    //   }
       
-    }, [cards]);
+    // }, [cards]);
 
-    const moveCard = useCallback(
-      (dragIndex: number, hoverIndex: number) => {
-        const dragCard = cards[dragIndex]
-        setCards(
-          update(cards, {
-            $splice: [
-              [dragIndex, 1],
-              [hoverIndex, 0, dragCard],
-            ],
-          }),
-        )
-      },
-      [cards],
-    )
+    // const moveCard = useCallback(
+    //   (dragIndex: number, hoverIndex: number) => {
+    //     const dragCard = cards[dragIndex]
+    //     setCards(
+    //       update(cards, {
+    //         $splice: [
+    //           [dragIndex, 1],
+    //           [hoverIndex, 0, dragCard],
+    //         ],
+    //       }),
+    //     )
+    //   },
+    //   [cards],
+    // )
 
     const renderCard = (card: { id: number; text: string, listId: number }, index: number) => {
+      console.log(card);
+      
       return (
         <Card
           left={left}
@@ -113,6 +132,7 @@ const List: React.FC = ({ children, lists, listId, setLists, boxId, boxes, setBo
           text={card.text}
           moveCard={moveCard}
           listId={listId}
+          lists={lists}
         />
       )
     }
@@ -120,17 +140,28 @@ const List: React.FC = ({ children, lists, listId, setLists, boxId, boxes, setBo
     return (
       <div ref={dropBox}>
         <button onClick={() => {
-          const id = cards.length + 1;
-          setCards([
-            ...cards,
-            {
-              id,
-              text: `Card Item #${id}`,
-              listId
+          const newId = list.length === 0 ? 0 : list.sort(sortById).reverse()[0].id + 1;
+          const newList = lists.map(list => {
+            if (list.id === listId) {
+              return {
+                // this naming convesion (lists, lists.list, lists.list.list) is confusing, need to rename to listItems, instead
+                ...list,
+                list: [
+                  ...list.list,
+                  {
+                    id: newId,
+                    text: `Card Item #${newId}`,
+                    listId
+                  }
+                ],
+              }
             }
-          ])
+
+            return list;
+          })
+          setLists(newList)
         }}>Add list item</button>
-        <div style={style}>{cards.map((card, i) => renderCard(card, i))}</div>
+        <div style={style}>{list.map((listItem, i) => renderCard(listItem, i))}</div>
         <div>{children}</div>
       </div>
     )
