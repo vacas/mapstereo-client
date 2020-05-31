@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Dispatch, SetStateAction } from 'react'
 import { useDrag } from 'react-dnd'
 import { ItemTypes } from './ItemTypes'
 
@@ -6,7 +6,6 @@ const style = {
   position: 'absolute',
   border: '1px dashed gray',
   backgroundColor: 'white',
-  padding: '0.5rem 1rem',
   cursor: 'move',
 }
 
@@ -16,11 +15,14 @@ interface Props {
   top?: number;
   children?: React.ReactChild;
   isList?: boolean;
+  title?: string;
+  setBoxes: Dispatch<SetStateAction<Array<{ id: number, left: number, top: number, title: string }>>>; 
+  boxes: Array<{ id: number, left: number, top: number, title: string }>
 }
 
-const Box = ({ id, left, top, children, isList }: Props) => {
+const Box = ({ id, left, top, children, isList, title, setBoxes, boxes }: Props) => {
   const [{ isDragging }, drag] = useDrag({
-    item: { id, left, top, type: isList ? ItemTypes.LIST : ItemTypes.BOX },
+    item: { id, left, top, title, type: isList ? ItemTypes.LIST : ItemTypes.BOX },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
@@ -29,8 +31,25 @@ const Box = ({ id, left, top, children, isList }: Props) => {
     return <div ref={drag} />
   }
   return (
-    <div ref={drag} style={{ ...style, left, top } as React.CSSProperties}>
-      {children}
+    <div ref={drag} style={{ ...style, left, top, paddingTop: !isList && 15 } as React.CSSProperties}>
+      <div style={{
+        padding: '0.5rem 1rem',
+      }}>
+        {children}
+      </div>
+      <button 
+        style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+        }}
+        onClick={() => {
+          const newBoxes = boxes.filter(box => box.id !== id);
+          setBoxes(newBoxes);
+        }}
+      >
+        delete
+      </button>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useRef, SetStateAction, Dispatch } from 'react'
 import { useDrag, useDrop, DropTargetMonitor } from 'react-dnd'
 import { ItemTypes } from './ItemTypes'
 import { XYCoord } from 'dnd-core'
@@ -14,13 +14,14 @@ const style = {
 
 export interface CardProps {
   id: any
-  text: string
+  title: string
   index: number
   listId: number;
   left?: number;
   top?: number;
   moveCard: (dragIndex: number, hoverIndex: number, listId: number, lists: Array<any>) => void;
   lists: Array<any>;
+  setLists?: Dispatch<SetStateAction<Array<any>>>
 }
 
 interface DragItem {
@@ -28,7 +29,7 @@ interface DragItem {
   id: string
   type: string
 }
-export const Card: React.FC<CardProps> = ({ id, text, index, listId, moveCard, left, top, lists }) => {
+export const Card: React.FC<CardProps> = ({ id, title, index, listId, moveCard, left, top, lists, setLists }) => {
   const ref = useRef<HTMLDivElement>(null)
   const [, drop] = useDrop({
     accept: ItemTypes.CARD,
@@ -83,18 +84,68 @@ export const Card: React.FC<CardProps> = ({ id, text, index, listId, moveCard, l
   })
 
   const [{ isDragging }, drag] = useDrag({
-    // TODO: ADD BOXID
-    item: { type: ItemTypes.CARD, id, index, listId, text, top, left  },
+    item: { type: ItemTypes.CARD, id, index, listId, title, top, left, ref  },
     collect: (monitor: any) => ({
       isDragging: monitor.isDragging(),
     }),
+    end: (dropResult, monitor) => {
+      const { type } = monitor.getDropResult() || {};
+      
+      const didDrop = monitor.didDrop()
+      
+      if (didDrop && type === 'container') {
+        const newLists = lists.map(list => {
+          if (list.id === listId) {
+            const newList = list.listItems.filter(listItem => listItem.id !== id);
+
+            return {
+              ...list,
+              listItems: newList
+            };
+          }
+
+          return list
+        });
+
+        setLists(newLists);
+      }
+    },
   })
 
   const opacity = isDragging ? 0.5 : 1
   drag(drop(ref))
   return (
-    <div ref={ref} style={{ ...style, opacity }}>
-      {text}
+    <div ref={ref} style={{ 
+      ...style,
+      opacity,
+      position: 'relative',
+    }}>
+      {title}
+      <button 
+        style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+        }}
+        onClick={() => {
+          const newLists = lists.map(list => {
+            if (list.id === listId) {
+              const newList = list.listItems.filter(listItem => listItem.id !== id);
+  
+              return {
+                ...list,
+                listItems: newList
+              };
+            }
+  
+            return list
+          });
+  
+          setLists(newLists);
+        }}
+      >
+        delete
+      </button>
     </div>
   )
 }

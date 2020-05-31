@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import update from 'immutability-helper';
-import Container from './Container';
+import Container from './BackgroundContainer';
+import Box from './Box';
 import List from './List';
+import maxBy from 'lodash/maxBy';
 
 const DEFAULT_POSITION = {
   top: 180,
@@ -13,58 +15,42 @@ const LIST_DEFAULT_POSITION = {
   left: 180,
 }
 
-
 const Example = () => {
   const [boxes, setBoxes] = useState([]);
   const [lists, setLists] = useState([]);
 
-  // useEffect(() => {}, [lists]);
-
   const moveCard = useCallback(
     (dragIndex: number, hoverIndex: number, listId: number, lists: Array<any>) => {
       const listData = lists && lists.length > 0 && lists.find(list => list.id === listId);
-      const dragCard = listData.list[dragIndex]
-
-      console.log(lists);
+      const dragCard = listData.listItems[dragIndex]
 
       const newList = lists.map(list => {
         if (list.id === listId) {
-          const reorganizedListItems = update(list.list, {
+          const reorganizedListItems = update(list.listItems, {
             $splice: [
               [dragIndex, 1],
               [hoverIndex, 0, dragCard],
             ],
           });
-
-          console.log();
           
 
           return {
             ...list,
-            list: reorganizedListItems,
+            listItems: reorganizedListItems,
           };
         }
 
         return list;
       });
 
-      console.log(newList);
-
-      // const reorganizedListItems = {
-      //   update(listData, {
-      //     $splice: [
-      //       [dragIndex, 1],
-      //       [hoverIndex, 0, dragCard],
-      //     ],
-      //   }),
-      // }
       setLists(newList)
     },[lists]
   )
 
   return (
     <div style={{
-      position: 'relative'
+      position: 'relative',
+      overflow: 'hidden',
     }}>
       <button style={{
         position: 'absolute',
@@ -72,12 +58,13 @@ const Example = () => {
         left: 0,
         zIndex: 5,
       }} onClick={() => {
-        const id = boxes.length + 1;
+        const maxBoxId = maxBy(boxes, 'id');
+        const boxId = !maxBoxId ? 0 : maxBoxId.id + 1;
         setBoxes([
           ...boxes,
           {
-            id,
-            title: `box #${id}`,
+            id: boxId,
+            title: `box #${boxId}`,
             ...DEFAULT_POSITION
           },
         ])
@@ -88,15 +75,17 @@ const Example = () => {
         left: 100,
         zIndex: 5,
       }} onClick={() => {
-        const boxId = boxes.length + 1;
-        const listId = lists.length + 1;
+        const maxBoxId = maxBy(boxes, 'id');
+        const maxListId = maxBy(lists, 'id');
+        const boxId = !maxBoxId ? 0 : maxBoxId.id + 1;
+        const listId = !maxListId ? 0 : maxListId.id + 1;
 
         setLists([
           ...lists,
           {
             id: listId,
             boxId,
-            list: []
+            listItems: []
           },
         ])
 
@@ -112,7 +101,54 @@ const Example = () => {
           },
         ])
       }}>Add List</button>
-      <Container boxes={boxes} setBoxes={setBoxes} lists={lists} setLists={setLists} />
+      <Container boxes={boxes} setBoxes={setBoxes} />
+      {boxes.map((box) => {
+        const { left, top, title, Component, listId, id, moveCard } = box
+        
+        if (Component) {
+          return (
+            <Box
+              key={id}
+              id={id}
+              left={left}
+              top={top}
+              isList
+              title={title}
+              setBoxes={setBoxes}
+              boxes={boxes}
+            >
+              <React.Fragment>
+                {title}
+                <Component 
+                  setLists={setLists} 
+                  lists={lists} 
+                  listId={listId} 
+                  boxId={id}
+                  left={left}
+                  top={top}
+                  setBoxes={setBoxes} 
+                  boxes={boxes}
+                  moveCard={moveCard}
+                />
+              </React.Fragment>
+            </Box>
+          )
+        }
+
+        return (
+          <Box
+            key={id}
+            id={id}
+            left={left}
+            top={top}
+            title={title}
+            setBoxes={setBoxes}
+            boxes={boxes}
+          >
+            {title}
+          </Box>
+        )
+      })}
     </div>
   )
 }
