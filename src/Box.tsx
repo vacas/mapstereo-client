@@ -18,11 +18,12 @@ interface Props {
   title?: string;
   setBoxes: Dispatch<SetStateAction<Array<{ id: number, left: number, top: number, title: string }>>>; 
   boxes: Array<{ id: number, left: number, top: number, title: string }>
+  blobUrl?: string,
 }
 
-const Box = ({ id, left, top, children, isList, title, setBoxes, boxes }: Props) => {
+const Box = ({ id, left, top, children, isList, title, setBoxes, boxes, blobUrl }: Props) => {
   const [{ isDragging }, drag] = useDrag({
-    item: { id, left, top, title, type: isList ? ItemTypes.LIST : ItemTypes.BOX },
+    item: { id, left, top, title, blobUrl, type: isList ? ItemTypes.LIST : ItemTypes.BOX },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
@@ -44,8 +45,11 @@ const Box = ({ id, left, top, children, isList, title, setBoxes, boxes }: Props)
           right: 0,
         }}
         onClick={() => {
-          const newBoxes = boxes.filter(box => box.id !== id);
-          setBoxes(newBoxes);
+          const confirmed = confirm(`Are you sure you want to delete "${title}"?`);
+          if (confirmed) {
+            const newBoxes = boxes.filter(box => box.id !== id);
+            setBoxes(newBoxes);
+          }
         }}
       >
         delete

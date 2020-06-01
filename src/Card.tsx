@@ -1,7 +1,8 @@
 import React, { useRef, SetStateAction, Dispatch } from 'react'
 import { useDrag, useDrop, DropTargetMonitor } from 'react-dnd'
-import { ItemTypes } from './ItemTypes'
 import { XYCoord } from 'dnd-core'
+import { ItemTypes } from './ItemTypes'
+import Recorder from './Recorder';
 
 const style = {
   border: '1px dashed gray',
@@ -19,6 +20,7 @@ export interface CardProps {
   listId: number;
   left?: number;
   top?: number;
+  blobUrl?: string;
   moveCard: (dragIndex: number, hoverIndex: number, listId: number, lists: Array<any>) => void;
   lists: Array<any>;
   setLists?: Dispatch<SetStateAction<Array<any>>>
@@ -29,7 +31,7 @@ interface DragItem {
   id: string
   type: string
 }
-export const Card: React.FC<CardProps> = ({ id, title, index, listId, moveCard, left, top, lists, setLists }) => {
+export const Card: React.FC<CardProps> = ({ id, title, index, listId, moveCard, left, top, lists, setLists, blobUrl }) => {
   const ref = useRef<HTMLDivElement>(null)
   const [, drop] = useDrop({
     accept: ItemTypes.CARD,
@@ -84,7 +86,7 @@ export const Card: React.FC<CardProps> = ({ id, title, index, listId, moveCard, 
   })
 
   const [{ isDragging }, drag] = useDrag({
-    item: { type: ItemTypes.CARD, id, index, listId, title, top, left, ref  },
+    item: { type: ItemTypes.CARD, id, index, listId, title, top, left, ref, blobUrl  },
     collect: (monitor: any) => ({
       isDragging: monitor.isDragging(),
     }),
@@ -112,6 +114,52 @@ export const Card: React.FC<CardProps> = ({ id, title, index, listId, moveCard, 
     },
   })
 
+  const saveUrlToList = (url) => {
+    const updatedLists = lists.map(list => {
+      if (list.id === listId) {
+        const newList = list.listItems.map(listItem => {
+          if (listItem.id === id) {
+            return ({
+              ...listItem,
+              blobUrl: url
+            })
+          }
+
+          return listItem;
+        });
+
+        return {
+          ...list,
+          listItems: newList
+        };
+      }
+
+      return list
+    });
+
+    setLists(updatedLists);
+  }
+
+  const deleteCard = () => {
+    const confirmed = confirm(`Are you sure you want to delete "${title}"?`);
+    if (confirmed) {
+      const newLists = lists.map(list => {
+        if (list.id === listId) {
+          const newList = list.listItems.filter(listItem => listItem.id !== id);
+
+          return {
+            ...list,
+            listItems: newList
+          };
+        }
+
+        return list
+      });
+
+      setLists(newLists);
+    }
+  }
+
   const opacity = isDragging ? 0.5 : 1
   drag(drop(ref))
   return (
@@ -120,29 +168,22 @@ export const Card: React.FC<CardProps> = ({ id, title, index, listId, moveCard, 
       opacity,
       position: 'relative',
     }}>
-      {title}
+      <React.Fragment>
+        <span className="title">
+          {title}
+        </span>
+        <Recorder
+          onStop={(url) => { saveUrlToList(url)}}
+          blobUrl={blobUrl}
+        />
+      </React.Fragment>
       <button 
         style={{
           position: 'absolute',
           top: 0,
           right: 0,
         }}
-        onClick={() => {
-          const newLists = lists.map(list => {
-            if (list.id === listId) {
-              const newList = list.listItems.filter(listItem => listItem.id !== id);
-  
-              return {
-                ...list,
-                listItems: newList
-              };
-            }
-  
-            return list
-          });
-  
-          setLists(newLists);
-        }}
+        onClick={deleteCard}
       >
         delete
       </button>

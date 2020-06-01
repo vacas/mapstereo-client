@@ -1,9 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import update from 'immutability-helper';
+import maxBy from 'lodash/maxBy';
 import Container from './BackgroundContainer';
 import Box from './Box';
 import List from './List';
-import maxBy from 'lodash/maxBy';
+import Recorder from './Recorder';
 
 const DEFAULT_POSITION = {
   top: 180,
@@ -14,6 +15,11 @@ const LIST_DEFAULT_POSITION = {
   top: 20,
   left: 180,
 }
+
+/*
+  - Add loop
+  - Add play list
+*/
 
 const Example = () => {
   const [boxes, setBoxes] = useState([]);
@@ -103,7 +109,7 @@ const Example = () => {
       }}>Add List</button>
       <Container boxes={boxes} setBoxes={setBoxes} />
       {boxes.map((box) => {
-        const { left, top, title, Component, listId, id, moveCard } = box
+        const { left, top, title, Component, listId, id, moveCard, blobUrl } = box
         
         if (Component) {
           return (
@@ -144,8 +150,28 @@ const Example = () => {
             title={title}
             setBoxes={setBoxes}
             boxes={boxes}
+            blobUrl={blobUrl}
           >
-            {title}
+            <React.Fragment>
+              {title}
+              <Recorder
+                onStop={(url) => {
+                  const updatedBox = boxes.map(box => {
+                    if (box.id === id) {
+                      return ({
+                        ...box,
+                        blobUrl: url
+                      });
+                    }
+
+                    return box;
+                  });
+
+                  setBoxes(updatedBox);
+                }}
+                blobUrl={blobUrl}
+              />
+            </React.Fragment>
           </Box>
         )
       })}

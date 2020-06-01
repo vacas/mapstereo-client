@@ -18,9 +18,12 @@
     "@babel/preset-typescript"
   ],
   "plugins": [
-    // "@babel/plugin-transform-arrow-functions",
-    // "transform-object-rest-spread",
-    "@babel/plugin-proposal-object-rest-spread"
-    // "transform-class-properties"
+    "@babel/plugin-proposal-object-rest-spread",
+    [
+      "@babel/plugin-transform-runtime",
+      {
+        "regenerator": true
+      }
+    ]
   ]
 }

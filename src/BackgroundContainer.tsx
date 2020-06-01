@@ -11,7 +11,7 @@ const styles = {
   position: 'relative',
 }
 
-const Container = ({ setBoxes, boxes }: { setBoxes: Dispatch<SetStateAction<Array<{ id: number, left: number, top: number, title: string }>>>; boxes: Array<{ id: number, left: number, top: number, title: string }> }) => {
+const Container = ({ setBoxes, boxes }: { setBoxes: Dispatch<SetStateAction<Array<{ id: number, left: number, top: number, title: string, blobUrl: string }>>>; boxes: Array<{ id: number, left: number, top: number, title: string, blobUrl: string }> }) => {
 
   const [, drop] = useDrop({
     accept: [ItemTypes.BOX, ItemTypes.CARD, ItemTypes.LIST],
@@ -34,11 +34,22 @@ const Container = ({ setBoxes, boxes }: { setBoxes: Dispatch<SetStateAction<Arra
 
         const delta = monitor.getClientOffset();
 
-        if (delta) {
-          // change to width by half
-          const left = delta.x - 64.25;
-          // change to height by half
-          const top = delta.y - 18;
+        // // change to width by half
+        // const left = delta.x - 64.25;
+        // // change to height by half
+        // const top = delta.y - 18;
+
+        if (delta && item.ref && item.ref.current) {
+          const boundingRect = item.ref.current.getElementsByClassName('title')[0].getBoundingClientRect();
+          const xPadding = 32;
+          const yPadding = 31;
+
+          const approxWidth = Math.floor(boundingRect.width);
+          const approxHeight = Math.floor(boundingRect.height);
+          // top left corner minus half of the width of item
+          const left = delta.x - ((approxWidth + xPadding) / 2);
+          // top left corner minus half of the height of item
+          const top = delta.y - ((approxHeight + yPadding) / 2);
 
           setBoxes([
             ...boxes,
@@ -47,6 +58,7 @@ const Container = ({ setBoxes, boxes }: { setBoxes: Dispatch<SetStateAction<Arra
               left,
               top,
               title: item.title,
+              blobUrl: item.blobUrl
             }
           ]);
         }

@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction } from 'react';
+import React, { useState, Dispatch, SetStateAction } from 'react';
 import { useDrop } from 'react-dnd';
 import { Card } from './Card';
 import { ItemTypes } from './ItemTypes';
@@ -14,6 +14,7 @@ export interface ListItem {
   id?: number
   title?: string,
   listId?: number,
+  blobUrl?: string,
 }
 
 export interface Props {
@@ -29,6 +30,7 @@ export interface Props {
 }
 
 const List = ({ lists, listId, setLists, boxes, setBoxes, left, top, moveCard }: Props) => {
+    
     const listData: { listItems: Array<ListItem> } = lists && lists.length > 0 && lists.find(list => list.id === listId);
     const { listItems } = listData || { listItem: [{ id: 0 }] };
 
@@ -36,6 +38,8 @@ const List = ({ lists, listId, setLists, boxes, setBoxes, left, top, moveCard }:
       accept: [ItemTypes.BOX, ItemTypes.CARD],
       drop: (item: any) => {
         if (item.type === 'box' && !item.Component) {
+          console.log(item);
+          
           const highestID = maxBy(listItems, 'id');
           
           const newId = !highestID ? 0 : highestID.id + 1;
@@ -49,7 +53,8 @@ const List = ({ lists, listId, setLists, boxes, setBoxes, left, top, moveCard }:
                   {
                     id: newId,
                     title: item.title,
-                    listId
+                    listId,
+                    blobUrl: item.blobUrl
                   }
                 ],
               }
@@ -71,33 +76,13 @@ const List = ({ lists, listId, setLists, boxes, setBoxes, left, top, moveCard }:
       },
     });
 
-    const renderCard = (card: ListItem, index: number) => {      
-      return (
-        <Card
-          left={left}
-          top={top}
-          key={card.id}
-          index={index}
-          id={card.id}
-          title={card.title}
-          moveCard={moveCard}
-          listId={listId}
-          lists={lists}
-          setLists={setLists}
-        />
-      )
-    }
-
-    return (
-      <div ref={drop}>
-        <button onClick={() => {
-          const highestID = maxBy(listItems, 'id');
+    const addItem = () => {
+      const highestID = maxBy(listItems, 'id');
           
           const newId = !highestID ? 0 : highestID.id + 1;
 
           const newList = lists.map(list => {
             if (list.id === listId) {
-              console.log('before push', list.listItems);
               const newList = [
                 ...list.listItems,
                 {
@@ -115,10 +100,36 @@ const List = ({ lists, listId, setLists, boxes, setBoxes, left, top, moveCard }:
 
             return list;
           })
-          console.log(newList);
           
           setLists(newList)
-        }}>Add list item</button>
+    }
+
+    const playList = () => {
+
+    }
+
+    const renderCard = (card: ListItem, index: number) => {      
+      return (
+        <Card
+          left={left}
+          top={top}
+          key={card.id}
+          index={index}
+          id={card.id}
+          title={card.title}
+          blobUrl={card.blobUrl}
+          moveCard={moveCard}
+          listId={listId}
+          lists={lists}
+          setLists={setLists}
+        />
+      )
+    }
+
+    return (
+      <div ref={drop}>
+        <button onClick={addItem}>Add list item</button>
+        <button onClick={playList}>Play list</button>
         <div style={style}>
           {listItems.length === 0 && (
             <div style={{
