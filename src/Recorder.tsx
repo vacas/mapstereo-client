@@ -33,9 +33,11 @@ type StatusMessages =
   interface Props {
     onStop: Dispatch<SetStateAction<string>>;
     blobUrl: string;
+    listId?: number;
+    cardId?: number;
   }
 
-const Recorder = ({ onStop, blobUrl }: Props) => {
+const Recorder = ({ onStop, blobUrl, listId, cardId }: Props) => {
   // const audioRef = useRef(null);
   const [loop, setLoop] = useState(false);
   const mediaRecorderOptions = null;
@@ -156,13 +158,14 @@ const Recorder = ({ onStop, blobUrl }: Props) => {
         <input type="checkbox" onClick={() => setLoop(!loop)}/>
         <div>
           <audio
+            id={`${listId ? `listId-${listId}-`:''}${cardId ? `cardId-${cardId}-`:''}${blobUrl}`}
             src={mediaBlobUrl}
             controls
             loop={loop} 
             onPause={(e)=> {
               // if audio was paused on its full duration, i.e. it finished playing, and is playing a list, then move on to next audio item
               if (e.currentTarget.currentTime === e.currentTarget.duration && !loop) {
-                
+
               }
             }}
           />

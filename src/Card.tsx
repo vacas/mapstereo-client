@@ -173,6 +173,8 @@ export const Card: React.FC<CardProps> = ({ id, title, index, listId, moveCard, 
           {title}
         </span>
         <Recorder
+          cardId={id}
+          listId={listId}
           onStop={(url) => { saveUrlToList(url)}}
           blobUrl={blobUrl}
         />

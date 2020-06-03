@@ -1,4 +1,4 @@
-import React, { useState, Dispatch, SetStateAction } from 'react';
+import React, { useState, useEffect, Dispatch, SetStateAction } from 'react';
 import { useDrop } from 'react-dnd';
 import { Card } from './Card';
 import { ItemTypes } from './ItemTypes';
@@ -30,7 +30,7 @@ export interface Props {
 }
 
 const List = ({ lists, listId, setLists, boxes, setBoxes, left, top, moveCard }: Props) => {
-    
+    const [playingList, setPlayList ] = useState(false);
     const listData: { listItems: Array<ListItem> } = lists && lists.length > 0 && lists.find(list => list.id === listId);
     const { listItems } = listData || { listItem: [{ id: 0 }] };
 
@@ -38,7 +38,6 @@ const List = ({ lists, listId, setLists, boxes, setBoxes, left, top, moveCard }:
       accept: [ItemTypes.BOX, ItemTypes.CARD],
       drop: (item: any) => {
         if (item.type === 'box' && !item.Component) {
-          console.log(item);
           
           const highestID = maxBy(listItems, 'id');
           
@@ -104,9 +103,54 @@ const List = ({ lists, listId, setLists, boxes, setBoxes, left, top, moveCard }:
           setLists(newList)
     }
 
-    const playList = () => {
+    const playList = (n: number) => {
+      const listItem = listItems[n];
+      let isPlaying = false;
+      
+      if (playingList && listItem) {
+        const { id, listId, blobUrl } = listItem;
+        const audioTag = document.getElementById(`${listId ? `listId-${listId}-`:''}${id ? `cardId-${id}-`:''}${blobUrl}`) as HTMLAudioElement;
+        audioTag.currentTime = 24*60*60; 
+        audioTag.play().then(() => {
+          isPlaying = true;
+          audioTag.currentTime = 0;
+          console.log('after playign', n);
+          console.log('audioTag.duration', audioTag.duration);
+          
+          setTimeout(() =>{
+            console.log('waiting');
 
+            if (isPlaying && listItems[n + 1]) {
+              playList(n + 1);
+            } else {
+              setPlayList(false);
+            }
+          }, (audioTag.duration * 1000)+500);
+          if (audioTag.paused && audioTag.duration !== audioTag.currentTime) {
+            isPlaying = false;
+            setPlayList(false);
+          }
+  
+          if (audioTag.ended) {
+            // isPlaying = false;
+            console.log('this finished');
+          }
+        });
+        // console.log(audioTag.duration * 1000);
+        
+        // setTimeout(() =>{console.log('waiting');}, audioTag.duration * 1000);
+        // // await Promise.resolve(() => {
+        // // })
+
+      }
     }
+
+    useEffect(() => {
+      if (playingList) {
+        playList(0);
+      }
+      return;
+    }, [playingList])
 
     const renderCard = (card: ListItem, index: number) => {      
       return (
@@ -129,7 +173,9 @@ const List = ({ lists, listId, setLists, boxes, setBoxes, left, top, moveCard }:
     return (
       <div ref={drop}>
         <button onClick={addItem}>Add list item</button>
-        <button onClick={playList}>Play list</button>
+        <button onClick={() => {
+          setPlayList(!playingList);
+        }}>{ playingList ? 'Stop' : 'Play'} list</button>
         <div style={style}>
           {listItems.length === 0 && (
             <div style={{
