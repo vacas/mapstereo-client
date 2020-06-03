@@ -103,6 +103,34 @@ const List = ({ lists, listId, setLists, boxes, setBoxes, left, top, moveCard }:
           setLists(newList)
     }
 
+    const removePlayList = ()=> {
+      for (let i = 0; i < listItems.length; i++) {
+        const listItem = listItems[i];
+        const { id, listId, blobUrl } = listItem;
+        const audioTag = document.getElementById(`${listId ? `listId-${listId}-`:''}${id ? `cardId-${id}-`:''}${blobUrl}`) as HTMLAudioElement;
+
+        audioTag.removeEventListener('ended', () => {
+          console.log('this finished');
+          console.log(listItems);
+  
+          if (listItems[i + 1]) {
+            playList(i + 1);
+          } else {
+            setPlayList(false);
+          }
+        });
+  
+        audioTag.removeEventListener('paused', () => {
+          if (audioTag.paused && audioTag.duration !== audioTag.currentTime) {
+            // isPlaying = false;
+            setPlayList(false);
+            return;
+          }
+        })
+      }
+      // const listItem = listItems[n];
+    }
+
     const playList = (n: number) => {
       const listItem = listItems[n];
       let isPlaying = false;
@@ -110,32 +138,48 @@ const List = ({ lists, listId, setLists, boxes, setBoxes, left, top, moveCard }:
       if (playingList && listItem) {
         const { id, listId, blobUrl } = listItem;
         const audioTag = document.getElementById(`${listId ? `listId-${listId}-`:''}${id ? `cardId-${id}-`:''}${blobUrl}`) as HTMLAudioElement;
-        audioTag.currentTime = 24*60*60; 
-        audioTag.play().then(() => {
-          isPlaying = true;
-          audioTag.currentTime = 0;
-          console.log('after playign', n);
-          console.log('audioTag.duration', audioTag.duration);
-          
-          setTimeout(() =>{
-            console.log('waiting');
 
-            if (isPlaying && listItems[n + 1]) {
-              playList(n + 1);
-            } else {
-              setPlayList(false);
-            }
-          }, (audioTag.duration * 1000)+500);
-          if (audioTag.paused && audioTag.duration !== audioTag.currentTime) {
-            isPlaying = false;
+        audioTag.addEventListener('ended', () => {
+          if (listItems[n + 1]) {
+            playList(n + 1);
+          } else {
             setPlayList(false);
           }
-  
-          if (audioTag.ended) {
-            // isPlaying = false;
-            console.log('this finished');
-          }
         });
+
+        audioTag.addEventListener('paused', () => {
+          if (audioTag.paused && audioTag.duration !== audioTag.currentTime) {
+            // isPlaying = false;
+            setPlayList(false);
+            return;
+          }
+        })
+        audioTag.play();
+        // .then(() => {
+        //   isPlaying = true;
+        //   audioTag.currentTime = 0;
+        //   console.log('after playign', n);
+        //   console.log('audioTag.duration', audioTag.duration);
+          
+        //   setTimeout(() =>{
+        //     console.log('waiting');
+
+        //     if (isPlaying && listItems[n + 1]) {
+        //       playList(n + 1);
+        //     } else {
+        //       setPlayList(false);
+        //     }
+        //   }, (audioTag.duration * 1000)+500);
+          // if (audioTag.paused && audioTag.duration !== audioTag.currentTime) {
+          //   isPlaying = false;
+          //   setPlayList(false);
+          // }
+  
+          // if (audioTag.ended) {
+          //   // isPlaying = false;
+          //   console.log('this finished');
+          // }
+        // });
         // console.log(audioTag.duration * 1000);
         
         // setTimeout(() =>{console.log('waiting');}, audioTag.duration * 1000);
@@ -148,6 +192,10 @@ const List = ({ lists, listId, setLists, boxes, setBoxes, left, top, moveCard }:
     useEffect(() => {
       if (playingList) {
         playList(0);
+      }
+
+      if (!playingList) {
+        removePlayList();
       }
       return;
     }, [playingList])
@@ -172,7 +220,7 @@ const List = ({ lists, listId, setLists, boxes, setBoxes, left, top, moveCard }:
 
     return (
       <div ref={drop}>
-        <button onClick={addItem}>Add list item</button>
+        <button disabled={playingList} onClick={addItem}>Add list item</button>
         <button onClick={() => {
           setPlayList(!playingList);
         }}>{ playingList ? 'Stop' : 'Play'} list</button>
