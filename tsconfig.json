@@ -7,17 +7,17 @@
     // "sourceMap": true,
     "allowSyntheticDefaultImports": true,
     "allowJs": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "skipLibCheck": true,
   },
   "exclude": [
     "node_modules",
-    "**/*.test.tsx",
-    "public"
+    "public",
+    "**/*.test.tsx"
   ],
   "include": [
-    "./src/**/*",
-  ],
-  "typeRoots": [
-    "./node_modules/@types",
-    "./typings.d.ts"
+    "./src/**/*.ts",
+    "./src/**/*.tsx",
   ]
 }

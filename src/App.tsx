@@ -1,7 +1,7 @@
-import React from 'react'
+import React from 'react';
 import Example from './Example';
-import { DndProvider } from 'react-dnd'
-import { HTML5Backend } from 'react-dnd-html5-backend'
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
 const App = () => {
   return (
@@ -10,7 +10,7 @@ const App = () => {
         <Example />
       </DndProvider>
     </div>
-  )
-}
+  );
+};
 
 export default App;

@@ -1,20 +1,16 @@
 import React, { useState, useEffect, Dispatch, SetStateAction } from 'react';
 import { useDrop } from 'react-dnd';
-import { Card } from './Card';
+import cn from 'classnames';
+import styled from 'styled-components';
+import Card from './Card';
 import { ItemTypes } from './ItemTypes';
 import maxBy from 'lodash/maxBy';
 
-const style = {
-  width: 400,
-  zIndex: 3,
-  margin: '10px 0',
-}
-
 export interface ListItem {
-  id?: number
-  title?: string,
-  listId?: number,
-  blobUrl?: string,
+  id?: number;
+  title?: string;
+  listId?: number;
+  blobUrl?: string;
 }
 
 export interface Props {
@@ -26,220 +22,203 @@ export interface Props {
   boxes?: Array<any>;
   left?: number;
   top?: number;
-  moveCard?: (dragIndex: number, hoverIndex: number, listId: number, lists: Array<any>) => void;
+  moveCard?: (
+    dragIndex: number,
+    hoverIndex: number,
+    listId: number,
+    lists: Array<any>
+  ) => void;
+  setRecording?: Dispatch<SetStateAction<boolean>>;
+  isRecording?: boolean;
 }
 
-const List = ({ lists, listId, setLists, boxes, setBoxes, left, top, moveCard }: Props) => {
-    const [playingList, setPlayList ] = useState(false);
-    const listData: { listItems: Array<ListItem> } = lists && lists.length > 0 && lists.find(list => list.id === listId);
-    const { listItems } = listData || { listItem: [{ id: 0 }] };
+const StyledList = styled.div`
+  & .cardWrapper {
+    width: 400px;
+    z-index: 3;
+    margin: 10px 0;
 
-    const [, drop] = useDrop({
-      accept: [ItemTypes.BOX, ItemTypes.CARD],
-      drop: (item: any) => {
-        if (item.type === 'box' && !item.Component) {
-          
-          const highestID = maxBy(listItems, 'id');
-          
-          const newId = !highestID ? 0 : highestID.id + 1;
+    & .dropzone {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 50px;
+      border: 1px dashed black;
+    }
+  }
+`;
 
-          const newList = lists.map(list => {
-            if (list.id === listId) {
-              return {
-                ...list,
-                listItems: [
-                  ...list.listItems,
-                  {
-                    id: newId,
-                    title: item.title,
-                    listId,
-                    blobUrl: item.blobUrl
-                  }
-                ],
-              }
-            }
+const List = ({
+  lists,
+  listId,
+  setLists,
+  boxes,
+  setBoxes,
+  left,
+  top,
+  moveCard,
+  isRecording,
+  setRecording,
+}: Props) => {
+  const [playingList, setPlayList] = useState(false);
+  const listData: { listItems: Array<ListItem> } =
+    lists && lists.length > 0 && lists.find((list) => list.id === listId);
+  const { listItems } = listData || { listItem: [{ id: 0 }] };
 
-            return list;
-          })
+  const [, drop] = useDrop({
+    accept: [ItemTypes.BOX, ItemTypes.CARD],
+    drop: (item: any) => {
+      if (item.type === 'box' && !item.Component) {
+        const highestID = maxBy(listItems, 'id');
 
-          setLists(newList);
-  
-          setBoxes([
-            ...boxes.filter(box => box.id !== item.id)
-          ]);
+        const newId = !highestID ? 0 : highestID.id + 1;
 
-          return { type: 'list' };
-        }
-
-        return undefined
-      },
-    });
-
-    const addItem = () => {
-      const highestID = maxBy(listItems, 'id');
-          
-          const newId = !highestID ? 0 : highestID.id + 1;
-
-          const newList = lists.map(list => {
-            if (list.id === listId) {
-              const newList = [
+        const newList = lists.map((list) => {
+          if (list.id === listId) {
+            return {
+              ...list,
+              listItems: [
                 ...list.listItems,
                 {
                   id: newId,
-                  title: `Card Item #${newId}`,
-                  listId
-                }
-              ];
-
-              return {
-                ...list,
-                listItems: newList
-              }
-            }
-
-            return list;
-          })
-          
-          setLists(newList)
-    }
-
-    const removePlayList = ()=> {
-      for (let i = 0; i < listItems.length; i++) {
-        const listItem = listItems[i];
-        const { id, listId, blobUrl } = listItem;
-        const audioTag = document.getElementById(`${listId ? `listId-${listId}-`:''}${id ? `cardId-${id}-`:''}${blobUrl}`) as HTMLAudioElement;
-
-        audioTag.removeEventListener('ended', () => {
-          console.log('this finished');
-          console.log(listItems);
-  
-          if (listItems[i + 1]) {
-            playList(i + 1);
-          } else {
-            setPlayList(false);
+                  title: item.title,
+                  listId,
+                  blobUrl: item.blobUrl,
+                },
+              ],
+            };
           }
-        });
-  
-        audioTag.removeEventListener('paused', () => {
-          if (audioTag.paused && audioTag.duration !== audioTag.currentTime) {
-            // isPlaying = false;
-            setPlayList(false);
-            return;
-          }
-        })
-      }
-      // const listItem = listItems[n];
-    }
 
-    const playList = (n: number) => {
-      const listItem = listItems[n];
-      let isPlaying = false;
-      
-      if (playingList && listItem) {
-        const { id, listId, blobUrl } = listItem;
-        const audioTag = document.getElementById(`${listId ? `listId-${listId}-`:''}${id ? `cardId-${id}-`:''}${blobUrl}`) as HTMLAudioElement;
-
-        audioTag.addEventListener('ended', () => {
-          if (listItems[n + 1]) {
-            playList(n + 1);
-          } else {
-            setPlayList(false);
-          }
+          return list;
         });
 
-        audioTag.addEventListener('paused', () => {
-          if (audioTag.paused && audioTag.duration !== audioTag.currentTime) {
-            // isPlaying = false;
-            setPlayList(false);
-            return;
-          }
-        })
-        audioTag.play();
-        // .then(() => {
-        //   isPlaying = true;
-        //   audioTag.currentTime = 0;
-        //   console.log('after playign', n);
-        //   console.log('audioTag.duration', audioTag.duration);
-          
-        //   setTimeout(() =>{
-        //     console.log('waiting');
+        setLists(newList);
 
-        //     if (isPlaying && listItems[n + 1]) {
-        //       playList(n + 1);
-        //     } else {
-        //       setPlayList(false);
-        //     }
-        //   }, (audioTag.duration * 1000)+500);
-          // if (audioTag.paused && audioTag.duration !== audioTag.currentTime) {
-          //   isPlaying = false;
-          //   setPlayList(false);
-          // }
-  
-          // if (audioTag.ended) {
-          //   // isPlaying = false;
-          //   console.log('this finished');
-          // }
-        // });
-        // console.log(audioTag.duration * 1000);
-        
-        // setTimeout(() =>{console.log('waiting');}, audioTag.duration * 1000);
-        // // await Promise.resolve(() => {
-        // // })
+        setBoxes([...boxes.filter((box) => box.id !== item.id)]);
 
+        return { type: 'list' };
       }
+
+      return undefined;
+    },
+  });
+
+  const addItem = () => {
+    const highestID = maxBy(listItems, 'id');
+
+    const newId = !highestID ? 0 : highestID.id + 1;
+
+    const newList = lists.map((list) => {
+      if (list.id === listId) {
+        const newList = [
+          ...list.listItems,
+          {
+            id: newId,
+            title: `Card Item #${newId}`,
+            listId,
+          },
+        ];
+
+        return {
+          ...list,
+          listItems: newList,
+        };
+      }
+
+      return list;
+    });
+
+    setLists(newList);
+  };
+
+  const playList = (n: number) => {
+    const listItem = listItems[n];
+
+    if (playingList && listItem) {
+      const { id, listId, blobUrl } = listItem;
+      const audioTag = document.getElementById(
+        `${listId ? `listId-${listId}-` : ''}${
+          id ? `cardId-${id}-` : ''
+        }${blobUrl}`
+      ) as HTMLAudioElement;
+
+      audioTag.currentTime = 0;
+
+      const playNextClip = () => {
+        if (listItems[n + 1]) {
+          playList(n + 1);
+        } else {
+          setPlayList(false);
+          audioTag.removeEventListener('ended', playNextClip);
+        }
+      };
+
+      const pauseList = () => {
+        if (audioTag.paused && audioTag.duration !== audioTag.currentTime) {
+          // isPlaying = false;
+          setPlayList(false);
+          audioTag.removeEventListener('ended', playNextClip);
+          audioTag.removeEventListener('paused', pauseList);
+          return;
+        }
+      };
+
+      audioTag.addEventListener('ended', playNextClip);
+      audioTag.addEventListener('paused', pauseList);
+      audioTag.play();
+    }
+  };
+
+  useEffect(() => {
+    if (playingList) {
+      playList(0);
     }
 
-    useEffect(() => {
-      if (playingList) {
-        playList(0);
-      }
+    return;
+  }, [playingList]);
 
-      if (!playingList) {
-        removePlayList();
-      }
-      return;
-    }, [playingList])
-
-    const renderCard = (card: ListItem, index: number) => {      
-      return (
-        <Card
-          left={left}
-          top={top}
-          key={card.id}
-          index={index}
-          id={card.id}
-          title={card.title}
-          blobUrl={card.blobUrl}
-          moveCard={moveCard}
-          listId={listId}
-          lists={lists}
-          setLists={setLists}
-        />
-      )
-    }
-
+  const renderCard = (card: ListItem, index: number) => {
     return (
-      <div ref={drop}>
-        <button disabled={playingList} onClick={addItem}>Add list item</button>
-        <button onClick={() => {
+      <Card
+        left={left}
+        top={top}
+        key={card.id}
+        index={index}
+        id={card.id}
+        title={card.title}
+        blobUrl={card.blobUrl}
+        moveCard={moveCard}
+        listId={listId}
+        lists={lists}
+        setLists={setLists}
+        setRecording={setRecording}
+        isRecording={isRecording}
+      />
+    );
+  };
+
+  return (
+    <StyledList ref={drop}>
+      <button disabled={playingList || isRecording} onClick={addItem}>
+        Add list item
+      </button>
+      <button
+        disabled={isRecording}
+        onClick={() => {
           setPlayList(!playingList);
-        }}>{ playingList ? 'Stop' : 'Play'} list</button>
-        <div style={style}>
-          {listItems.length === 0 && (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              height: 50,
-              border: '1px dashed black'
-            }}>
-              Drop box here
-            </div>
-          )}
-          {listItems.length > 0 && listItems.map((listItem, i) => renderCard(listItem, i))}
-        </div>
+        }}
+      >
+        {playingList ? 'Stop' : 'Play'} list
+      </button>
+      <div className="cardWrapper">
+        {listItems.length === 0 ? (
+          <div className="dropzone">Drop box here</div>
+        ) : (
+          listItems.map((listItem, i) => renderCard(listItem, i))
+        )}
       </div>
-    )
-}
+    </StyledList>
+  );
+};
 
 export default List;
