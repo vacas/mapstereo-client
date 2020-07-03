@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Dispatch, SetStateAction } from 'react';
+import React, { useState, useEffect, useRef, Dispatch, SetStateAction, useCallback } from 'react';
 import { useDrop } from 'react-dnd';
 import cn from 'classnames';
 import styled from 'styled-components';
@@ -60,6 +60,8 @@ const List = ({
   isRecording,
   setRecording,
 }: Props) => {
+  const audioRef = useRef(null);
+  const [currentlyPlaying, setCurrentlyPlaying] = useState(null);
   const [playingList, setPlayList] = useState(false);
   const listData: { listItems: Array<ListItem> } =
     lists && lists.length > 0 && lists.find((list) => list.id === listId);
@@ -131,10 +133,39 @@ const List = ({
     setLists(newList);
   };
 
+  const playNextClip = useCallback((e) => {
+    if (playingList) {
+      const nextSibling = e.target.parentElement.parentElement.parentElement.parentElement.nextElementSibling;
+      if (nextSibling && nextSibling.getElementsByTagName('audio')[0]) {
+        audioRef.current = nextSibling.getElementsByTagName('audio')[0];
+        audioRef.current.play();
+        audioRef.current.addEventListener('ended', playNextClip);
+      }
+      // setCurrentlyPlaying(cur + 1);
+      // playList(currentlyPlaying + 1);
+    } else {
+      audioRef.current = null;
+      setPlayList(false);
+      // setCurrentlyPlaying(null);
+    }
+    console.log('currentlyPlaying', audioRef.current);
+  }, [playingList, setPlayList]);
+
+  // const pauseList = (audioTag) => {
+  //   if (audioTag.paused && audioTag.duration !== audioTag.currentTime) {
+  //     // isPlaying = false;
+  //     // setPlayList(false);
+  //     setCurrentlyPlaying(null);
+  //     return;
+  //   }
+  // };
+
   const playList = (n: number) => {
     const listItem = listItems[n];
-
-    if (playingList && listItem) {
+    console.log('listItem', listItem);
+    
+    if (listItem) {
+      setCurrentlyPlaying(n);
       const { id, listId, blobUrl } = listItem;
       const audioTag = document.getElementById(
         `${listId ? `listId-${listId}-` : ''}${
@@ -142,44 +173,81 @@ const List = ({
         }${blobUrl}`
       ) as HTMLAudioElement;
 
+      audioRef.current = audioTag;
       audioTag.currentTime = 0;
 
-      const playNextClip = () => {
-        if (listItems[n + 1]) {
-          playList(n + 1);
-        } else {
-          setPlayList(false);
-          audioTag.removeEventListener('ended', playNextClip);
-        }
-      };
+      // console.log('playingList', playingList);
 
-      const pauseList = () => {
-        if (audioTag.paused && audioTag.duration !== audioTag.currentTime) {
+      // @ts-ignore
+      // audioTag.onpause = ((e: CustomEvent) => {
+        // if (playingList && audioTag.paused && audioTag.duration !== audioTag.currentTime) {
+          // console.log('playingList on pause', playingList);
+          
           // isPlaying = false;
-          setPlayList(false);
-          audioTag.removeEventListener('ended', playNextClip);
-          audioTag.removeEventListener('paused', pauseList);
-          return;
-        }
-      };
+          // setPlayList(false);
+          // audioTag.removeEventListener('ended', playNextClip);
+          // audioTag.removeEventListener('paused', pauseList);
+          // return;
+        // }
+      // });
+
+      // @ts-ignore
+      // audioTag.onended = ((e: CustomEvent) => {
+        // console.log('playingList on ended', playingList);
+        // if (playingList && listItems[n + 1]) {
+          // playList(n + 1);
+        // } else {
+          // setPlayList(false);
+          // audioTag.removeEventListener('ended', playNextClip);
+      //   }
+      // });
 
       audioTag.addEventListener('ended', playNextClip);
-      audioTag.addEventListener('paused', pauseList);
+      // audioTag.addEventListener('paused', pauseList);
       audioTag.play();
     }
   };
 
   useEffect(() => {
-    if (playingList) {
-      playList(0);
-    }
+    console.log('playingList', playingList);
+    console.log('audioRef', audioRef);
+    
+    if (!playingList) {
+      for (let i = 0; i < listItems.length; i++) {
+        const { id, blobUrl } = listItems[i];
+        
+        const audioTag = document.getElementById(
+          `${listId ? `listId-${listId}-` : ''}${
+            id ? `cardId-${id}-` : ''
+          }${blobUrl}`
+        ) as HTMLAudioElement;
 
-    return;
+        audioTag.removeEventListener('ended', playNextClip);
+        // audioTag.removeEventListener('paused', pauseList);
+        return;
+      }
+      setCurrentlyPlaying(null);
+
+      return;
+    }
+    
+    return playList(0);
   }, [playingList]);
+
+  useEffect(() => {
+    if (currentlyPlaying + 1 === listItems.length) {
+      setCurrentlyPlaying(null);
+      setPlayList(false);
+    }
+    // console.log(currentlyPlaying);
+    
+  }, [currentlyPlaying])
 
   const renderCard = (card: ListItem, index: number) => {
     return (
       <Card
+        setPlayList={setPlayList}
+        playList={playingList}
         left={left}
         top={top}
         key={card.id}
@@ -206,6 +274,12 @@ const List = ({
         disabled={isRecording}
         onClick={() => {
           setPlayList(!playingList);
+          // if (currentlyPlaying === null) {
+          //   playList(0);
+          //   // setCurrentlyPlaying(0);
+          // } else {
+          //   setCurrentlyPlaying(null);
+          // }
         }}
       >
         {playingList ? 'Stop' : 'Play'} list

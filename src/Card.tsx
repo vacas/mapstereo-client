@@ -24,6 +24,8 @@ export interface CardProps {
   setLists?: Dispatch<SetStateAction<Array<any>>>;
   setRecording?: Dispatch<SetStateAction<boolean>>;
   isRecording?: boolean;
+  playList: boolean;
+  setPlayList: Dispatch<SetStateAction<boolean>>;
 }
 
 interface DragItem {
@@ -64,6 +66,8 @@ const Card: React.FC<CardProps> = ({
   setLists,
   blobUrl,
   isRecording,
+  playList,
+  setPlayList,
   setRecording,
 }: CardProps) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -219,6 +223,8 @@ const Card: React.FC<CardProps> = ({
     >
       <span className="title">{title}</span>
       <Recorder
+        playList={playList}
+        setPlayList={setPlayList}
         cardId={id}
         listId={listId}
         onStop={(url) => {

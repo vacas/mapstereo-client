@@ -1,4 +1,4 @@
-import React, { SetStateAction, Dispatch } from 'react';
+import React, { SetStateAction, Dispatch, useEffect } from 'react';
 import styled from 'styled-components';
 import { useDrop } from 'react-dnd';
 import { ItemTypes } from './ItemTypes';
@@ -38,6 +38,17 @@ const Container = ({
 }) => {
   const width = useCurrentWidth();
   const height = useCurrentHeight();
+
+  useEffect(() => {
+    for (let i = 0; i < boxes.length; i++) {
+      const { left, top, id } = boxes[i];
+      if (left > width) {
+        moveBox(id, width - 50, top);
+      } else if (top > height) {
+        moveBox(id, left, height - 50);
+      }
+    }
+  }, [width, height])
 
   const [, drop] = useDrop({
     accept: [ItemTypes.BOX, ItemTypes.CARD, ItemTypes.LIST],

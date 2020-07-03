@@ -46,6 +46,8 @@ interface Props {
   cardId?: number;
   setRecording?: Dispatch<SetStateAction<boolean>>;
   isRecording?: boolean;
+  playList?: boolean;
+  setPlayList: Dispatch<SetStateAction<boolean>>;
 }
 
 const StyledAudioWrapper = styled.section`
@@ -73,6 +75,8 @@ const Recorder = ({
   cardId,
   isRecording,
   setRecording,
+  setPlayList,
+  playList
 }: Props) => {
   const [loop, setLoop] = useState(false);
   const mediaRecorderOptions = null;
@@ -86,6 +90,10 @@ const Recorder = ({
 
   const [mediaBlobUrl, setMediaBlobUrl] = useState<string | null>(blobUrl);
   const [error, setError] = useState<keyof typeof RecorderErrors>('NONE');
+
+  // useEffect(() => {
+  //   if ()
+  // }, [playList])
 
   // set up basic variables for app
   const getMediaStream = useCallback(async () => {
@@ -205,6 +213,24 @@ const Recorder = ({
         <input type="checkbox" onClick={() => setLoop(!loop)} />
         <div>
           <audio
+            onEnded={() => {
+               //     //   if (listItems[n + 1]) {
+  //     //     playLisdt(n + 1);
+  //     //   } else {
+  //     //     setPlayList(false);
+  //     //     audioTag.removeEventListener('ended', playNextClip);
+  //     //   }
+  //     // };
+
+  //     // const pauseList = () => {
+  //     //   if (audioTag.paused && audioTag.duration !== audioTag.currentTime) {
+  //     //     // isPlaying = false;
+  //     //     setPlayList(false);
+  //     //     // audioTag.removeEventListener('ended', playNextClip);
+  //     //     // audioTag.removeEventListener('paused', pauseList);
+  //     //     return;
+  //     //   }
+            }}
             id={`${listId ? `listId-${listId}-` : ''}${
               cardId ? `cardId-${cardId}-` : ''
             }${blobUrl}`}

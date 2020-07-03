@@ -33,6 +33,19 @@ const StyledExample = styled.div`
   }
 `;
 
+/*
+  TO DO
+  * Add list functionalities:
+    - Remove event listeners when list finishes
+    - Stop and remove event listeners when any of the list items has been paused
+    - Stop play list when click on button
+    - Disable record on play list (should I disable only in the list or all?)
+    - Disable play on play list (same as above)
+    - Should I make a universal disableButtons state
+    - Reposition boxes if window resizes
+    - Go through the full flow
+*/
+
 const Example = () => {
   const [isRecording, setRecording] = useState(false);
   const [boxes, setBoxes] = useState([]);
