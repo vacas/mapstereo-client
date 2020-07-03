@@ -133,32 +133,22 @@ const List = ({
     setLists(newList);
   };
 
-  const playNextClip = useCallback((e) => {
-    if (playingList) {
-      const nextSibling = e.target.parentElement.parentElement.parentElement.parentElement.nextElementSibling;
-      if (nextSibling && nextSibling.getElementsByTagName('audio')[0]) {
-        audioRef.current = nextSibling.getElementsByTagName('audio')[0];
-        audioRef.current.play();
-        audioRef.current.addEventListener('ended', playNextClip);
-      }
-      // setCurrentlyPlaying(cur + 1);
-      // playList(currentlyPlaying + 1);
-    } else {
-      audioRef.current = null;
-      setPlayList(false);
-      // setCurrentlyPlaying(null);
+  const playNextClip = (n) => {
+    if (listItems[n + 1]) {
+      playList(n + 1);
     }
-    console.log('currentlyPlaying', audioRef.current);
-  }, [playingList, setPlayList]);
+  };
 
-  // const pauseList = (audioTag) => {
-  //   if (audioTag.paused && audioTag.duration !== audioTag.currentTime) {
-  //     // isPlaying = false;
-  //     // setPlayList(false);
-  //     setCurrentlyPlaying(null);
-  //     return;
-  //   }
-  // };
+  const pauseList = (e, n) => {
+    console.log('hello from pause');
+    if (e.currentTarget.paused && e.currentTarget.duration !== e.currentTarget.currentTime) {
+      // isPlaying = false;
+      
+      setPlayList(false);
+      e.currentTarget.removeEventListener('ended', () => playNextClip(n));
+      return;
+    }
+  };
 
   const playList = (n: number) => {
     const listItem = listItems[n];
@@ -176,35 +166,18 @@ const List = ({
       audioRef.current = audioTag;
       audioTag.currentTime = 0;
 
-      // console.log('playingList', playingList);
 
-      // @ts-ignore
-      // audioTag.onpause = ((e: CustomEvent) => {
-        // if (playingList && audioTag.paused && audioTag.duration !== audioTag.currentTime) {
-          // console.log('playingList on pause', playingList);
-          
-          // isPlaying = false;
-          // setPlayList(false);
-          // audioTag.removeEventListener('ended', playNextClip);
-          // audioTag.removeEventListener('paused', pauseList);
-          // return;
-        // }
-      // });
 
-      // @ts-ignore
-      // audioTag.onended = ((e: CustomEvent) => {
-        // console.log('playingList on ended', playingList);
-        // if (playingList && listItems[n + 1]) {
-          // playList(n + 1);
-        // } else {
-          // setPlayList(false);
-          // audioTag.removeEventListener('ended', playNextClip);
-      //   }
-      // });
-
-      audioTag.addEventListener('ended', playNextClip);
-      // audioTag.addEventListener('paused', pauseList);
+      audioTag.addEventListener('ended', () => playNextClip(n), {
+        once: true,
+      });
+      audioTag.addEventListener('paused', (e) => pauseList(e, n), {
+        once: true,
+      });
       audioTag.play();
+
+      // audioTag.removeEventListener('ended', () => playNextClip(n));
+      // audioTag.removeEventListener('paused', pauseList);
     }
   };
 
