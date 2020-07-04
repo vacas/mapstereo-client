@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import _ from 'lodash';
 
 export const sortById = (a, b) => {
@@ -77,15 +77,39 @@ export const getRecorderId = (
   }${blobUrl}`;
 
   export const supportsMediaRecorder = () => {
-    const navigator = window.navigator as any;
-     return navigator.getUserMedia || navigator.webkitGetUserMedia ||
+    const navigator = <any>window.navigator;
+
+    return navigator.getUserMedia || navigator.webkitGetUserMedia ||
     navigator.mozGetUserMedia || navigator.msGetUserMedia;
   }
 
   export const isArrayEqual = (x, y) => {
-    return _(x).differenceWith(y, _.isEqual).isEmpty();
+    const diff = _(x).differenceWith(y, _.isEqual);
+    console.log('diff', diff);
+    
+    return diff.isEmpty();
   };
 
-  export default {
-    supportsMediaRecorder
+  export const usePrevious = (value) => {
+    const ref = useRef();
+    useEffect(() => {
+      ref.current = value;
+    });
+    return ref.current;
+  }
+
+  export const randomColor = () => Math.floor(Math.random()*16777215).toString(16);
+
+  export const getCursorElement = (id) => {
+    const elementId = 'cursor-' + id;
+    let element = document.getElementById(elementId);
+    if(element == null) {
+      element = document.createElement('div');
+      element.id = elementId;
+      element.className = 'cursor';
+      element.style.backgroundColor = randomColor();
+      // Perhaps you want to attach these elements another parent than document
+      document.appendChild(element);
+    }
+    return element;
   }

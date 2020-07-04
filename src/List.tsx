@@ -30,6 +30,7 @@ export interface Props {
   ) => void;
   setDisableAll?: Dispatch<SetStateAction<boolean>>;
   fullDisable?: boolean;
+  socket?: SocketIOClient.Socket;
 }
 
 const StyledList = styled.div`
@@ -68,12 +69,14 @@ const List = ({
   moveCard,
   fullDisable,
   setDisableAll,
+  socket,
 }: Props) => {
   const [playingList, setPlayList] = useState(false);
   const listData: { listItems: Array<ListItem> } =
     lists && lists.length > 0 && lists.find((list) => list.id === listId);
   const { listItems } = listData || { listItem: [{ id: 0 }] };
 
+  // if a box is dropped inside a list, box becomes into a list item and gets removed from background container
   const [, drop] = useDrop({
     accept: [ItemTypes.BOX, ItemTypes.CARD],
     drop: (item: any) => {
@@ -82,7 +85,7 @@ const List = ({
 
         const newId = !highestID ? 0 : highestID.id + 1;
 
-        const newList = lists.map((list) => {
+        const newLists = lists.map((list) => {
           if (list.id === listId) {
             return {
               ...list,
@@ -100,10 +103,17 @@ const List = ({
 
           return list;
         });
+        const newBoxes = [...boxes.filter((box) => box.id !== item.id)];
 
-        setLists(newList);
+        setLists(newLists);
+        setBoxes(newBoxes);
+
+        socket.emit('sendingChanges', JSON.stringify({
+          boxes: newBoxes,
+          lists: newLists,
+        }));
+
         setDisableAll(false);
-        setBoxes([...boxes.filter((box) => box.id !== item.id)]);
 
         return { type: 'list' };
       }
@@ -112,12 +122,13 @@ const List = ({
     },
   });
 
+  // adds new list item
   const addItem = () => {
     const highestID = maxBy(listItems, 'id');
 
     const newId = !highestID ? 0 : highestID.id + 1;
 
-    const newList = lists.map((list) => {
+    const newLists = lists.map((list) => {
       if (list.id === listId) {
         const newList = [
           ...list.listItems,
@@ -137,9 +148,13 @@ const List = ({
       return list;
     });
 
-    setLists(newList);
+    setLists(newLists);
+    socket.emit('sendingChanges', JSON.stringify({
+      lists: newLists,
+    }));
   };
 
+  // handles playing next clip if available
   const playNextClip = (e) => {
     const currentId = e.currentTarget.id;
     // finds the current index in listItems
@@ -155,6 +170,7 @@ const List = ({
     return setPlayList(false);
   };
 
+  // if any item in list is paused, pause the whole list
   const pauseList = (e) => {
     if (
       e.currentTarget.paused &&
@@ -168,6 +184,7 @@ const List = ({
     }
   };
 
+  // plays items in list
   const playList = (n: number) => {
     const listItem = listItems[n];
 
@@ -192,7 +209,6 @@ const List = ({
   const renderCard = (card: ListItem, index: number) => {
     return (
       <Card
-        setPlayList={setPlayList}
         playList={playingList}
         left={left}
         top={top}
@@ -207,6 +223,7 @@ const List = ({
         setLists={setLists}
         setDisableAll={setDisableAll}
         fullDisable={fullDisable}
+        socket={socket}
       />
     );
   };

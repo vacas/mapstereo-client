@@ -19,6 +19,7 @@ interface Props {
   boxes: Array<{ id: number; left: number; top: number; title: string }>;
   blobUrl?: string;
   fullDisable?: boolean;
+  socket?: SocketIOClient.Socket;
 }
 
 const StyledBox = styled.div`
@@ -54,6 +55,7 @@ const Box = ({
   boxes,
   blobUrl,
   fullDisable,
+  socket,
 }: Props) => {
   const [{ isDragging }, drag] = useDrag({
     item: {
@@ -77,6 +79,9 @@ const Box = ({
     if (confirmed) {
       const newBoxes = boxes.filter((box) => box.id !== id);
       setBoxes(newBoxes);
+      socket.emit('sendingChanges', JSON.stringify({
+        boxes: newBoxes,
+      }));
     }
   };
 

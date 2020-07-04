@@ -17,6 +17,7 @@ const Container = ({
   setBoxes,
   boxes,
   setDisableAll,
+  socket,
   fullDisable,
 }: {
   setBoxes: Dispatch<
@@ -38,7 +39,8 @@ const Container = ({
     blobUrl: string;
   }>;
   setDisableAll: Dispatch<SetStateAction<boolean>>;
-  fullDisable: boolean;
+  socket?: SocketIOClient.Socket;
+  fullDisable?: boolean;
 }) => {
   const width = useCurrentWidth();
   const height = useCurrentHeight();
@@ -88,8 +90,7 @@ const Container = ({
           const left = delta.x - (approxWidth + xPadding) / 2;
           // top left corner minus half of the height of item
           const top = delta.y - (approxHeight + yPadding) / 2;
-
-          setBoxes([
+          const newBoxes = [
             ...boxes,
             {
               id: maxBoxId ? maxBoxId.id + 1 : boxes.length + 1,
@@ -98,7 +99,12 @@ const Container = ({
               title: item.title,
               blobUrl: item.blobUrl,
             },
-          ]);
+          ];
+
+          setBoxes(newBoxes);
+          socket.emit('sendingChanges', JSON.stringify({
+            boxes: newBoxes,
+          }));
         }
 
         return { type: 'container' };
@@ -108,19 +114,21 @@ const Container = ({
   });
 
   const moveBox = (id, left, top) => {
-    setBoxes(
-      update(boxes, {
-        $set: [
-          ...boxes.map((box) => {
-            if (box.id === id) {
-              return { ...box, left, top };
-            }
+    const updatedBoxes = update(boxes, {
+      $set: [
+        ...boxes.map((box) => {
+          if (box.id === id) {
+            return { ...box, left, top };
+          }
 
-            return box;
-          }),
-        ],
-      })
-    );
+          return box;
+        }),
+      ],
+    });
+    setBoxes(updatedBoxes);
+    socket.emit('sendingChanges', JSON.stringify({
+      boxes: updatedBoxes,
+    }));
   };
   return <StyledContainer ref={drop} />;
 };

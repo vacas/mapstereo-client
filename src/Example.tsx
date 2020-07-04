@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 import update from 'immutability-helper';
-import * as helper from './helper';
+import { getCursorElement, supportsMediaRecorder } from './helper';
 import maxBy from 'lodash/maxBy';
 import Container from './BackgroundContainer';
 import Box from './Box';
@@ -38,17 +38,25 @@ const StyledExample = styled.div`
 `;
 
 
+/*
+  TODO LIST:
+  - Make custom state for setBoxes and setLists to clean up socket.emit (https://dev.to/filippofilip95/i-replaced-usestate-hook-with-custom-one-3dn1)
+  - Enhance move card experience
+  - emit message on socket to block box or card if it is being recorded on another side (currently blocks all buttons)
+  - display cursor (https://stackoverflow.com/questions/34162200/displaying-cursor-on-every-connected-client-in-socket-io)
+*/
+
 const Example = () => {
-  const supportsMediaRecorder = helper.supportsMediaRecorder();
+  const mediaRecorderIsSupported = supportsMediaRecorder();
   const [fullDisable, setDisableAll] = useState(!supportsMediaRecorder);
   const [boxes, setBoxes] = useState([]);
   const [lists, setLists] = useState([]);
   
   useEffect(() => {
-    if (!supportsMediaRecorder) {
+    if (!mediaRecorderIsSupported) {
       alert('User Media API not supported.');
     }
-  }, [supportsMediaRecorder]);
+  }, [mediaRecorderIsSupported]);
   
   useEffect(() => {
     socket.on('connect', () => {
@@ -56,27 +64,33 @@ const Example = () => {
       socket.send('Hello');
      });
      socket.on('receivingChanges', data => {
-       const receivedData = data && JSON.parse(data) || { lists: [], boxes: [] };
+       const res = data && JSON.parse(data) || { lists: [], boxes: [] };
+       console.log('res', res);
+       
 
-       const equalLists = helper.isArrayEqual(receivedData.lists, lists);
-       const equalBoxes = helper.isArrayEqual(receivedData.boxes, boxes);
-
-       if (!equalLists) {
-         setLists(receivedData.lists);
+       if (res.lists) {
+        setLists(res.lists);
        }
 
-       if (!equalBoxes) {
-         setBoxes(receivedData.boxes);
+       if (res.boxes) {
+        setBoxes(res.boxes);
        }
-     })
+     });
+     socket.on('recordingInProgress', data => {
+       const res = data && JSON.parse(data) || { recording: false };
+
+       console.log('res', res);
+       
+
+       setDisableAll(res.recording);
+     });
+     socket.on('draw_cursor', (data) => {
+      const res = JSON.parse(data);
+      const el = getCursorElement(res.id) as HTMLElement;
+      el.style.top = res.line[0].x;
+      el.style.left = res.line[0].y;
+    })
   }, []);
-
-  useEffect(() => {
-    socket.emit('sendingChanges', JSON.stringify({
-      lists,
-      boxes,
-    }));
-  }, [lists, boxes])
 
 
   const moveCard = useCallback(
@@ -90,7 +104,7 @@ const Example = () => {
         lists && lists.length > 0 && lists.find((list) => list.id === listId);
       const dragCard = listData.listItems[dragIndex];
 
-      const newList = lists.map((list) => {
+      const newLists = lists.map((list) => {
         if (list.id === listId) {
           const reorganizedListItems = update(list.listItems, {
             $splice: [
@@ -108,7 +122,10 @@ const Example = () => {
         return list;
       });
 
-      setLists(newList);
+      setLists(newLists);
+      socket.emit('sendingChanges', JSON.stringify({
+        lists: newLists,
+      }));
     },
     [lists]
   );
@@ -118,42 +135,49 @@ const Example = () => {
     const maxListId = maxBy(lists, 'id');
     const boxId = !maxBoxId ? 0 : maxBoxId.id + 1;
     const listId = !maxListId ? 0 : maxListId.id + 1;
-
-    setLists([
+    const newLists = [
       ...lists,
       {
         id: listId,
         boxId,
         listItems: [],
       },
-    ]);
-
-    setBoxes([
+    ];
+    const newBoxes = [
       ...boxes,
       {
         id: boxId,
         title: `box #${boxId}`,
         ...LIST_DEFAULT_POSITION,
         listId,
-        Component: List,
-        moveCard,
       },
-    ]);
+    ];
 
+    setLists(newLists);
+    setBoxes(newBoxes);
+
+    socket.emit('sendingChanges', JSON.stringify({
+      lists: newLists,
+      boxes: newBoxes,
+    }));
     return;
   };
 
   const addBox = () => {
     const maxBoxId = maxBy(boxes, 'id');
     const boxId = !maxBoxId ? 0 : maxBoxId.id + 1;
-    setBoxes([
+    const newBoxes = [
       ...boxes,
       {
         id: boxId,
         title: `box #${boxId}`,
         ...DEFAULT_POSITION,
       },
-    ]);
+    ];
+    setBoxes(newBoxes);
+    socket.emit('sendingChanges', JSON.stringify({
+      boxes: newBoxes,
+    }));
   };
 
   return (
@@ -179,21 +203,20 @@ const Example = () => {
         setBoxes={setBoxes}
         fullDisable={fullDisable}
         setDisableAll={setDisableAll}
+        socket={socket}
       />
       {boxes.map((box) => {
         const {
           left,
           top,
           title,
-          Component,
           listId,
           id,
-          moveCard,
           blobUrl,
         } = box;
 
         const onStop = (url) => {
-          const updatedBox = boxes.map((box) => {
+          const updatedBoxes = boxes.map((box) => {
             if (box.id === id) {
               return {
                 ...box,
@@ -204,10 +227,13 @@ const Example = () => {
             return box;
           });
 
-          setBoxes(updatedBox);
+          setBoxes(updatedBoxes);
+          socket.emit('sendingChanges', JSON.stringify({
+            boxes: updatedBoxes,
+          }));
         };
 
-        if (Component) {
+        if (listId || listId === 0) {
           return (
             <Box
               key={id}
@@ -219,21 +245,22 @@ const Example = () => {
               setBoxes={setBoxes}
               boxes={boxes}
               fullDisable={fullDisable}
+              socket={socket}
             >
               <React.Fragment>
                 {title}
-                <Component
+                <List
                   setDisableAll={setDisableAll}
                   fullDisable={fullDisable}
                   setLists={setLists}
                   lists={lists}
                   listId={listId}
-                  boxId={id}
                   left={left}
                   top={top}
                   setBoxes={setBoxes}
                   boxes={boxes}
                   moveCard={moveCard}
+                  socket={socket}
                 />
               </React.Fragment>
             </Box>
@@ -259,6 +286,7 @@ const Example = () => {
                 setDisableAll={setDisableAll}
                 onStop={onStop}
                 blobUrl={blobUrl}
+                socket={socket}
               />
             </React.Fragment>
           </Box>

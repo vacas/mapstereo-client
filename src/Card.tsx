@@ -25,7 +25,7 @@ export interface CardProps {
   setDisableAll?: Dispatch<SetStateAction<boolean>>;
   fullDisable?: boolean;
   playList: boolean;
-  setPlayList: Dispatch<SetStateAction<boolean>>;
+  socket?: SocketIOClient.Socket;
 }
 
 interface DragItem {
@@ -67,8 +67,8 @@ const Card: React.FC<CardProps> = ({
   blobUrl,
   fullDisable,
   playList,
-  setPlayList,
   setDisableAll,
+  socket,
 }: CardProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const [, drop] = useDrop({
@@ -160,6 +160,9 @@ const Card: React.FC<CardProps> = ({
         });
 
         setLists(newLists);
+        socket.emit('sendingChanges', JSON.stringify({
+          lists: newLists,
+        }));
       }
     },
   });
@@ -188,6 +191,9 @@ const Card: React.FC<CardProps> = ({
     });
 
     setLists(updatedLists);
+    socket.emit('sendingChanges', JSON.stringify({
+      lists: updatedLists,
+    }));
   };
 
   const deleteCard = () => {
@@ -209,6 +215,9 @@ const Card: React.FC<CardProps> = ({
       });
 
       setLists(newLists);
+      socket.emit('sendingChanges', JSON.stringify({
+        lists: newLists,
+      }));
     }
   };
 
@@ -232,6 +241,7 @@ const Card: React.FC<CardProps> = ({
         blobUrl={blobUrl}
         setDisableAll={setDisableAll}
         fullDisable={fullDisable}
+        socket={socket}
       />
       <button disabled={fullDisable} onClick={deleteCard}>
         delete

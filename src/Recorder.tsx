@@ -48,6 +48,7 @@ interface Props {
   setDisableAll?: Dispatch<SetStateAction<boolean>>;
   fullDisable?: boolean;
   playList?: boolean;
+  socket?: SocketIOClient.Socket;
 }
 
 const StyledAudioWrapper = styled.section`
@@ -76,6 +77,7 @@ const Recorder = ({
   fullDisable,
   setDisableAll,
   playList,
+  socket
 }: Props) => {
   const [loop, setLoop] = useState(false);
   const mediaRecorderOptions = null;
@@ -134,8 +136,17 @@ const Recorder = ({
     console.log(status);
   }, [status]);
 
+  useEffect(() => {
+    if (mediaBlobUrl !== blobUrl) {
+      setMediaBlobUrl(blobUrl);
+    }
+  }, [blobUrl])
+
   const startRecording = async () => {
     setDisableAll(true);
+    socket.emit('recording', JSON.stringify({
+      recording: true,
+    }));
     setDisableRecord(true);
     setDisableStop(false);
     setError('NONE');
@@ -175,6 +186,9 @@ const Recorder = ({
   const stopRecording = () => {
     if (mediaRecorder.current) {
       setDisableAll(false);
+      socket.emit('recording', JSON.stringify({
+        recording: false,
+      }));
       setDisableRecord(false);
       setDisableStop(true);
       setStatus('stopping');
@@ -208,7 +222,7 @@ const Recorder = ({
           <audio
             id={getRecorderId(listId, cardId, blobUrl)}
             className={cn({
-              // disabled: fullDisable,
+              disabled: fullDisable,
             })}
             muted={fullDisable}
             src={mediaBlobUrl}
