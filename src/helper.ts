@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import _ from 'lodash';
 
 export const sortById = (a, b) => {
   if (a.id > b.id) {
@@ -80,6 +81,10 @@ export const getRecorderId = (
      return navigator.getUserMedia || navigator.webkitGetUserMedia ||
     navigator.mozGetUserMedia || navigator.msGetUserMedia;
   }
+
+  export const isArrayEqual = (x, y) => {
+    return _(x).differenceWith(y, _.isEqual).isEmpty();
+  };
 
   export default {
     supportsMediaRecorder

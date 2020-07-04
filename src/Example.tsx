@@ -7,6 +7,9 @@ import Container from './BackgroundContainer';
 import Box from './Box';
 import List from './List';
 import Recorder from './Recorder';
+import socketIOClient from "socket.io-client";
+
+const socket = socketIOClient('ws://127.0.0.1:4001');
 
 const DEFAULT_POSITION = {
   top: 180,
@@ -34,30 +37,46 @@ const StyledExample = styled.div`
   }
 `;
 
-/*
-  TO DO
-  * Add list functionalities:
-    - Remove event listeners when list finishes
-    - Stop and remove event listeners when any of the list items has been paused
-    - Stop play list when click on button
-    - Disable record on play list (should I disable only in the list or all?)
-    - Disable play on play list (same as above)
-    - Should I make a universal disableButtons state
-    - Reposition boxes if window resizes
-    - Go through the full flow
-*/
 
 const Example = () => {
   const supportsMediaRecorder = helper.supportsMediaRecorder();
   const [fullDisable, setDisableAll] = useState(!supportsMediaRecorder);
   const [boxes, setBoxes] = useState([]);
   const [lists, setLists] = useState([]);
-
+  
   useEffect(() => {
     if (!supportsMediaRecorder) {
       alert('User Media API not supported.');
     }
-  }, [supportsMediaRecorder])
+  }, [supportsMediaRecorder]);
+  
+  useEffect(() => {
+    socket.on('connect', () => {
+      console.log('WebSocket Client Connected');
+      socket.send('Hello');
+     });
+     socket.on('receivingChanges', data => {
+       const receivedData = data && JSON.parse(data) || { lists: [], boxes: [] };
+
+       const equalLists = helper.isArrayEqual(receivedData.lists, lists);
+       const equalBoxes = helper.isArrayEqual(receivedData.boxes, boxes);
+
+       if (!equalLists) {
+         setLists(receivedData.lists);
+       }
+
+       if (!equalBoxes) {
+         setBoxes(receivedData.boxes);
+       }
+     })
+  }, []);
+
+  useEffect(() => {
+    socket.emit('sendingChanges', JSON.stringify({
+      lists,
+      boxes,
+    }));
+  }, [lists, boxes])
 
 
   const moveCard = useCallback(
