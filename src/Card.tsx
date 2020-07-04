@@ -224,7 +224,6 @@ const Card: React.FC<CardProps> = ({
       <span className="title">{title}</span>
       <Recorder
         playList={playList}
-        setPlayList={setPlayList}
         cardId={id}
         listId={listId}
         onStop={(url) => {

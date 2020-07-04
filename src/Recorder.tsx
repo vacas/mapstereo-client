@@ -8,6 +8,7 @@ import React, {
 } from 'react';
 import cn from 'classnames';
 import styled from 'styled-components';
+import { getRecorderId } from './helper';
 
 /*
   Adaptation of react-media-recorder: https://github.com/0x006F/react-media-recorder/blob/master/src/index.ts
@@ -47,7 +48,6 @@ interface Props {
   setRecording?: Dispatch<SetStateAction<boolean>>;
   isRecording?: boolean;
   playList?: boolean;
-  setPlayList: Dispatch<SetStateAction<boolean>>;
 }
 
 const StyledAudioWrapper = styled.section`
@@ -75,8 +75,7 @@ const Recorder = ({
   cardId,
   isRecording,
   setRecording,
-  setPlayList,
-  playList
+  playList,
 }: Props) => {
   const [loop, setLoop] = useState(false);
   const mediaRecorderOptions = null;
@@ -183,18 +182,12 @@ const Recorder = ({
     }
   };
 
-  const onPause = (e) => {
-    // if audio was paused on its full duration, i.e. it finished playing, and is playing a list, then move on to next audio item
-    // if (e.currentTarget.currentTime === e.currentTarget.duration && !loop) {
-    // }
-  };
-
   return (
     <StyledAudioWrapper>
       {/* <canvas className="visualizer" height="60px"></canvas> */}
       <div id="buttons">
         <button
-          disabled={disabledRecord || isRecording}
+          disabled={disabledRecord || isRecording || playList}
           className={cn('record', {
             recording: disabledRecord,
           })}
@@ -213,27 +206,7 @@ const Recorder = ({
         <input type="checkbox" onClick={() => setLoop(!loop)} />
         <div>
           <audio
-            onEnded={() => {
-               //     //   if (listItems[n + 1]) {
-  //     //     playLisdt(n + 1);
-  //     //   } else {
-  //     //     setPlayList(false);
-  //     //     audioTag.removeEventListener('ended', playNextClip);
-  //     //   }
-  //     // };
-
-  //     // const pauseList = () => {
-  //     //   if (audioTag.paused && audioTag.duration !== audioTag.currentTime) {
-  //     //     // isPlaying = false;
-  //     //     setPlayList(false);
-  //     //     // audioTag.removeEventListener('ended', playNextClip);
-  //     //     // audioTag.removeEventListener('paused', pauseList);
-  //     //     return;
-  //     //   }
-            }}
-            id={`${listId ? `listId-${listId}-` : ''}${
-              cardId ? `cardId-${cardId}-` : ''
-            }${blobUrl}`}
+            id={getRecorderId(listId, cardId, blobUrl)}
             className={cn({
               disabled: isRecording,
             })}
@@ -241,7 +214,6 @@ const Recorder = ({
             src={mediaBlobUrl}
             controls
             loop={loop}
-            onPause={onPause}
           />
         </div>
         {error && error !== 'NONE' && <span>{error}</span>}

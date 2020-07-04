@@ -146,7 +146,7 @@ const Example = () => {
       >
         Add List
       </button>
-      <Container boxes={boxes} setBoxes={setBoxes} />
+      <Container boxes={boxes} setBoxes={setBoxes} isRecording={isRecording} setRecording={setRecording} />
       {boxes.map((box) => {
         const {
           left,

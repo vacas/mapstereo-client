@@ -16,6 +16,8 @@ const StyledContainer = styled.div`
 const Container = ({
   setBoxes,
   boxes,
+  setRecording,
+  isRecording,
 }: {
   setBoxes: Dispatch<
     SetStateAction<
@@ -35,6 +37,10 @@ const Container = ({
     title: string;
     blobUrl: string;
   }>;
+  setRecording: Dispatch<
+    SetStateAction<boolean>
+  >;
+  isRecording: boolean;
 }) => {
   const width = useCurrentWidth();
   const height = useCurrentHeight();
@@ -99,6 +105,7 @@ const Container = ({
 
         return { type: 'container' };
       }
+      setRecording(false);
     },
   });
 
