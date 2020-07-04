@@ -37,9 +37,7 @@ const Container = ({
     title: string;
     blobUrl: string;
   }>;
-  setRecording: Dispatch<
-    SetStateAction<boolean>
-  >;
+  setRecording: Dispatch<SetStateAction<boolean>>;
   isRecording: boolean;
 }) => {
   const width = useCurrentWidth();
@@ -54,7 +52,7 @@ const Container = ({
         moveBox(id, left, height - 50);
       }
     }
-  }, [width, height])
+  }, [width, height]);
 
   const [, drop] = useDrop({
     accept: [ItemTypes.BOX, ItemTypes.CARD, ItemTypes.LIST],

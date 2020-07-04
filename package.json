@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "scripts": {
     "lint": "tsc --noEmit && eslint '*/**/*.{js,jsx,ts,tsx}' --quiet --fix",
-    "dev": "webpack-dev-server --config ./webpack.config.js --mode development"
+    "dev": "webpack-dev-server --config ./webpack.config.js --mode development",
+    "build": "webpack",
+    "start": "node server/index.js"
   },
   "dependencies": {
     "@babel/polyfill": "^7.8.7",
@@ -21,6 +23,7 @@
     "babel-polyfill": "^6.26.0",
     "classnames": "^2.2.6",
     "es7-object-polyfill": "^1.0.1",
+    "express": "^4.17.1",
     "immutability-helper": "^3.0.2",
     "lodash": "^4.17.15",
     "react": "^16.13.1",

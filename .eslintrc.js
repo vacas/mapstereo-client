@@ -2,7 +2,9 @@ module.exports = {
     "parser": "@typescript-eslint/parser",
     "env": {
         "browser": true,
-        "es6": true
+        "es6": true,
+        "commonjs": true,
+        "node": true
     },
     "extends": [
         "eslint:recommended",
@@ -27,7 +29,8 @@ module.exports = {
             "jsx": true
         },
         "ecmaVersion": 11,
-        "sourceType": "module"
+        "sourceType": "module",
+        "ecmaVersion": 2015
     },
     "plugins": [
         "react",
@@ -43,5 +46,13 @@ module.exports = {
         "react": {
           "version": "detect"
         }
-      }
+    },
+    "overrides": [
+        {
+            "files": ["**/*.js"],
+            "rules": {
+                "strict": "off"
+            }
+        }
+    ]
 };

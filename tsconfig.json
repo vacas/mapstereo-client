@@ -15,7 +15,8 @@
   "exclude": [
     "node_modules",
     "public",
-    "**/*.test.tsx"
+    "**/*.test.tsx",
+    "*.js"
   ],
   "include": [
     "./src/**/*.ts",

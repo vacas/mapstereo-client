@@ -66,6 +66,11 @@ export const useCurrentHeight = () => {
   return height;
 };
 
-export const getRecorderId = (listId?: number, cardId?: number, blobUrl?: string) => `${listId || listId === 0? `listId-${listId}-` : ''}${
-  cardId || cardId === 0 ? `_cardId-${cardId}-` : ''
-}${blobUrl}`;
+export const getRecorderId = (
+  listId?: number,
+  cardId?: number,
+  blobUrl?: string
+) =>
+  `${listId || listId === 0 ? `listId-${listId}-` : ''}${
+    cardId || cardId === 0 ? `_cardId-${cardId}-` : ''
+  }${blobUrl}`;

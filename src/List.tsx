@@ -49,10 +49,13 @@ const StyledList = styled.div`
 `;
 
 const getCurrentIndex = (currentId, listItems) => {
-  const currentIndex = listItems.findIndex(item => item && getRecorderId(item.listId, item.id, item.blobUrl) === currentId);
+  const currentIndex = listItems.findIndex(
+    (item) =>
+      item && getRecorderId(item.listId, item.id, item.blobUrl) === currentId
+  );
 
   return currentIndex;
-}
+};
 
 const List = ({
   lists,
@@ -148,12 +151,15 @@ const List = ({
     if (currentIndex !== -1 && nextAudio && nextAudio.blobUrl) {
       return playList(currentIndex + 1);
     }
-    
+
     return setPlayList(false);
   };
 
   const pauseList = (e) => {
-    if (e.currentTarget.paused && e.currentTarget.duration !== e.currentTarget.currentTime) {
+    if (
+      e.currentTarget.paused &&
+      e.currentTarget.duration !== e.currentTarget.currentTime
+    ) {
       setPlayList(false);
       e.currentTarget.removeEventListener('ended', playNextClip, {
         once: true,
@@ -164,10 +170,12 @@ const List = ({
 
   const playList = (n: number) => {
     const listItem = listItems[n];
-    
+
     if (listItem) {
       const { id, listId, blobUrl } = listItem;
-      const audioTag = document.getElementById(getRecorderId(listId, id, blobUrl)) as HTMLAudioElement;
+      const audioTag = document.getElementById(
+        getRecorderId(listId, id, blobUrl)
+      ) as HTMLAudioElement;
 
       audioTag.currentTime = 0;
 
@@ -212,7 +220,7 @@ const List = ({
         disabled={isRecording}
         onClick={() => {
           setPlayList(true);
-          playList(0)
+          playList(0);
         }}
       >
         {playingList ? 'Stop' : 'Play'} list
