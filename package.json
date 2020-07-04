@@ -20,6 +20,7 @@
     "@types/node": "^12.0.0",
     "@types/react": "^16.9.0",
     "@types/react-dom": "^16.9.0",
+    "audio-recorder-polyfill": "^0.3.6",
     "babel-polyfill": "^6.26.0",
     "classnames": "^2.2.6",
     "es7-object-polyfill": "^1.0.1",
