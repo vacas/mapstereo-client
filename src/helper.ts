@@ -74,3 +74,13 @@ export const getRecorderId = (
   `${listId || listId === 0 ? `listId-${listId}-` : ''}${
     cardId || cardId === 0 ? `_cardId-${cardId}-` : ''
   }${blobUrl}`;
+
+  export const supportsMediaRecorder = () => {
+    const navigator = window.navigator as any;
+     return navigator.getUserMedia || navigator.webkitGetUserMedia ||
+    navigator.mozGetUserMedia || navigator.msGetUserMedia;
+  }
+
+  export default {
+    supportsMediaRecorder
+  }

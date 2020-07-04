@@ -45,8 +45,8 @@ interface Props {
   blobUrl: string;
   listId?: number;
   cardId?: number;
-  setRecording?: Dispatch<SetStateAction<boolean>>;
-  isRecording?: boolean;
+  setDisableAll?: Dispatch<SetStateAction<boolean>>;
+  fullDisable?: boolean;
   playList?: boolean;
 }
 
@@ -73,8 +73,8 @@ const Recorder = ({
   blobUrl,
   listId,
   cardId,
-  isRecording,
-  setRecording,
+  fullDisable,
+  setDisableAll,
   playList,
 }: Props) => {
   const [loop, setLoop] = useState(false);
@@ -89,10 +89,6 @@ const Recorder = ({
 
   const [mediaBlobUrl, setMediaBlobUrl] = useState<string | null>(blobUrl);
   const [error, setError] = useState<keyof typeof RecorderErrors>('NONE');
-
-  // useEffect(() => {
-  //   if ()
-  // }, [playList])
 
   // set up basic variables for app
   const getMediaStream = useCallback(async () => {
@@ -139,16 +135,19 @@ const Recorder = ({
   }, [status]);
 
   const startRecording = async () => {
-    setRecording(true);
+    setDisableAll(true);
     setDisableRecord(true);
     setDisableStop(false);
     setError('NONE');
     if (!mediaStream.current) {
       await getMediaStream();
     }
+    
     if (mediaStream.current) {
       mediaRecorder.current = new MediaRecorder(mediaStream.current);
+
       mediaRecorder.current.ondataavailable = onRecordingActive;
+      
       mediaRecorder.current.onstop = onRecordingStop;
       mediaRecorder.current.onerror = () => {
         setError('NO_RECORDER');
@@ -167,6 +166,7 @@ const Recorder = ({
     const blobProperty: BlobPropertyBag = { type: 'audio/wav' };
     const blob = new Blob(mediaChunks.current, blobProperty);
     const url = URL.createObjectURL(blob);
+    
     setStatus('stopped');
     setMediaBlobUrl(url);
     onStop(url);
@@ -174,7 +174,7 @@ const Recorder = ({
 
   const stopRecording = () => {
     if (mediaRecorder.current) {
-      setRecording(false);
+      setDisableAll(false);
       setDisableRecord(false);
       setDisableStop(true);
       setStatus('stopping');
@@ -187,7 +187,7 @@ const Recorder = ({
       {/* <canvas className="visualizer" height="60px"></canvas> */}
       <div id="buttons">
         <button
-          disabled={disabledRecord || isRecording || playList}
+          disabled={disabledRecord || fullDisable || playList}
           className={cn('record', {
             recording: disabledRecord,
           })}
@@ -208,9 +208,9 @@ const Recorder = ({
           <audio
             id={getRecorderId(listId, cardId, blobUrl)}
             className={cn({
-              disabled: isRecording,
+              // disabled: fullDisable,
             })}
-            muted={isRecording}
+            muted={fullDisable}
             src={mediaBlobUrl}
             controls
             loop={loop}

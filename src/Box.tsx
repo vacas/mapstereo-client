@@ -18,7 +18,7 @@ interface Props {
   >;
   boxes: Array<{ id: number; left: number; top: number; title: string }>;
   blobUrl?: string;
-  isRecording?: boolean;
+  fullDisable?: boolean;
 }
 
 const StyledBox = styled.div`
@@ -53,7 +53,7 @@ const Box = ({
   setBoxes,
   boxes,
   blobUrl,
-  isRecording,
+  fullDisable,
 }: Props) => {
   const [{ isDragging }, drag] = useDrag({
     item: {
@@ -89,7 +89,7 @@ const Box = ({
       style={{ left, top } as React.CSSProperties}
     >
       <div className="child">{children}</div>
-      <button disabled={isRecording} onClick={deleteBox}>
+      <button disabled={fullDisable} onClick={deleteBox}>
         delete
       </button>
     </StyledBox>

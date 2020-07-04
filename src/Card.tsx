@@ -22,8 +22,8 @@ export interface CardProps {
   ) => void;
   lists: Array<any>;
   setLists?: Dispatch<SetStateAction<Array<any>>>;
-  setRecording?: Dispatch<SetStateAction<boolean>>;
-  isRecording?: boolean;
+  setDisableAll?: Dispatch<SetStateAction<boolean>>;
+  fullDisable?: boolean;
   playList: boolean;
   setPlayList: Dispatch<SetStateAction<boolean>>;
 }
@@ -65,10 +65,10 @@ const Card: React.FC<CardProps> = ({
   lists,
   setLists,
   blobUrl,
-  isRecording,
+  fullDisable,
   playList,
   setPlayList,
-  setRecording,
+  setDisableAll,
 }: CardProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const [, drop] = useDrop({
@@ -230,10 +230,10 @@ const Card: React.FC<CardProps> = ({
           saveUrlToList(url);
         }}
         blobUrl={blobUrl}
-        setRecording={setRecording}
-        isRecording={isRecording}
+        setDisableAll={setDisableAll}
+        fullDisable={fullDisable}
       />
-      <button disabled={isRecording} onClick={deleteCard}>
+      <button disabled={fullDisable} onClick={deleteCard}>
         delete
       </button>
     </StyledCard>

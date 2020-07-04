@@ -1,6 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 import update from 'immutability-helper';
+import * as helper from './helper';
 import maxBy from 'lodash/maxBy';
 import Container from './BackgroundContainer';
 import Box from './Box';
@@ -47,9 +48,17 @@ const StyledExample = styled.div`
 */
 
 const Example = () => {
-  const [isRecording, setRecording] = useState(false);
+  const supportsMediaRecorder = helper.supportsMediaRecorder();
+  const [fullDisable, setDisableAll] = useState(!supportsMediaRecorder);
   const [boxes, setBoxes] = useState([]);
   const [lists, setLists] = useState([]);
+
+  useEffect(() => {
+    if (!supportsMediaRecorder) {
+      alert('User Media API not supported.');
+    }
+  }, [supportsMediaRecorder])
+
 
   const moveCard = useCallback(
     (
@@ -133,7 +142,7 @@ const Example = () => {
       <button
         id="addBox"
         className="globalAddButton"
-        disabled={isRecording}
+        disabled={fullDisable}
         onClick={addBox}
       >
         Add Box Item
@@ -141,7 +150,7 @@ const Example = () => {
       <button
         id="addList"
         className="globalAddButton"
-        disabled={isRecording}
+        disabled={fullDisable}
         onClick={addList}
       >
         Add List
@@ -149,8 +158,8 @@ const Example = () => {
       <Container
         boxes={boxes}
         setBoxes={setBoxes}
-        isRecording={isRecording}
-        setRecording={setRecording}
+        fullDisable={fullDisable}
+        setDisableAll={setDisableAll}
       />
       {boxes.map((box) => {
         const {
@@ -190,13 +199,13 @@ const Example = () => {
               title={title}
               setBoxes={setBoxes}
               boxes={boxes}
-              isRecording={isRecording}
+              fullDisable={fullDisable}
             >
               <React.Fragment>
                 {title}
                 <Component
-                  setRecording={setRecording}
-                  isRecording={isRecording}
+                  setDisableAll={setDisableAll}
+                  fullDisable={fullDisable}
                   setLists={setLists}
                   lists={lists}
                   listId={listId}
@@ -222,13 +231,13 @@ const Example = () => {
             setBoxes={setBoxes}
             boxes={boxes}
             blobUrl={blobUrl}
-            isRecording={isRecording}
+            fullDisable={fullDisable}
           >
             <React.Fragment>
               {title}
               <Recorder
-                isRecording={isRecording}
-                setRecording={setRecording}
+                fullDisable={fullDisable}
+                setDisableAll={setDisableAll}
                 onStop={onStop}
                 blobUrl={blobUrl}
               />

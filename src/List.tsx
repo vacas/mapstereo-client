@@ -28,8 +28,8 @@ export interface Props {
     listId: number,
     lists: Array<any>
   ) => void;
-  setRecording?: Dispatch<SetStateAction<boolean>>;
-  isRecording?: boolean;
+  setDisableAll?: Dispatch<SetStateAction<boolean>>;
+  fullDisable?: boolean;
 }
 
 const StyledList = styled.div`
@@ -66,8 +66,8 @@ const List = ({
   left,
   top,
   moveCard,
-  isRecording,
-  setRecording,
+  fullDisable,
+  setDisableAll,
 }: Props) => {
   const [playingList, setPlayList] = useState(false);
   const listData: { listItems: Array<ListItem> } =
@@ -102,7 +102,7 @@ const List = ({
         });
 
         setLists(newList);
-        setRecording(false);
+        setDisableAll(false);
         setBoxes([...boxes.filter((box) => box.id !== item.id)]);
 
         return { type: 'list' };
@@ -205,19 +205,19 @@ const List = ({
         listId={listId}
         lists={lists}
         setLists={setLists}
-        setRecording={setRecording}
-        isRecording={isRecording}
+        setDisableAll={setDisableAll}
+        fullDisable={fullDisable}
       />
     );
   };
 
   return (
     <StyledList ref={drop}>
-      <button disabled={playingList || isRecording} onClick={addItem}>
+      <button disabled={playingList || fullDisable} onClick={addItem}>
         Add list item
       </button>
       <button
-        disabled={isRecording}
+        disabled={fullDisable}
         onClick={() => {
           setPlayList(true);
           playList(0);
