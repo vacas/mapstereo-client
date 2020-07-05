@@ -4,6 +4,7 @@
   "scripts": {
     "lint": "tsc --noEmit && eslint '*/**/*.{js,jsx,ts,tsx}' --quiet --fix",
     "dev": "webpack-dev-server --config ./webpack.config.js --mode development",
+    "dev:build": "webpack --mode=development",
     "dev:server": "nodemon server/index.js",
     "build": "webpack",
     "start": "node server/index.js"

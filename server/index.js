@@ -42,7 +42,15 @@ io.on('connection', (socket) => {
     socket.broadcast.emit('receivingChanges', data);
   });
   socket.on('disconnect', () => {
+    console.log(`Total connected: ${socket.client.conn.server.clientsCount}`);
+    
     console.log('Client disconnected');
+    setTimeout(() => {
+      if (socket.client.conn.server.clientsCount === 0) {
+        currentState = {};
+      }
+    }, 500);
+
   });
   socket.on('draw_cursor', (data) => {
     console.log('data', data);

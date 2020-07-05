@@ -289,6 +289,7 @@ const Example = () => {
             boxes={boxes}
             blobUrl={blobUrl}
             fullDisable={fullDisable}
+            socket={socket}
           >
             <React.Fragment>
               {title}
