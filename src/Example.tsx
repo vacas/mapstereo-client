@@ -9,8 +9,9 @@ import List from './List';
 import Recorder from './Recorder';
 import socketIOClient from "socket.io-client";
 
-
-const socket = socketIOClient(`ws://${window.location.host}`);
+const socket = socketIOClient(`${process.env.NODE_ENV === 'production' ? 'wss' : 'ws'}://${window.location.host}`, {
+  secure: process.env.NODE_ENV === 'production'
+});
 
 const DEFAULT_POSITION = {
   top: 180,
