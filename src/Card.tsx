@@ -160,9 +160,9 @@ const Card: React.FC<CardProps> = ({
         });
 
         setLists(newLists);
-        socket.emit('sendingChanges', JSON.stringify({
+        socket.emit('sendingChanges', {
           lists: newLists,
-        }));
+        });
       }
     },
   });
@@ -191,9 +191,9 @@ const Card: React.FC<CardProps> = ({
     });
 
     setLists(updatedLists);
-    socket.emit('sendingChanges', JSON.stringify({
+    socket.emit('sendingChanges', {
       lists: updatedLists,
-    }));
+    });
   };
 
   const deleteCard = () => {
@@ -215,9 +215,9 @@ const Card: React.FC<CardProps> = ({
       });
 
       setLists(newLists);
-      socket.emit('sendingChanges', JSON.stringify({
+      socket.emit('sendingChanges', {
         lists: newLists,
-      }));
+      });
     }
   };
 

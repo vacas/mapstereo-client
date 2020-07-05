@@ -108,10 +108,10 @@ const List = ({
         setLists(newLists);
         setBoxes(newBoxes);
 
-        socket.emit('sendingChanges', JSON.stringify({
+        socket.emit('sendingChanges', {
           boxes: newBoxes,
           lists: newLists,
-        }));
+        });
 
         setDisableAll(false);
 
@@ -149,9 +149,9 @@ const List = ({
     });
 
     setLists(newLists);
-    socket.emit('sendingChanges', JSON.stringify({
+    socket.emit('sendingChanges', {
       lists: newLists,
-    }));
+    });
   };
 
   // handles playing next clip if available

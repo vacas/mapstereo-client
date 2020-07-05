@@ -79,9 +79,9 @@ const Box = ({
     if (confirmed) {
       const newBoxes = boxes.filter((box) => box.id !== id);
       setBoxes(newBoxes);
-      socket.emit('sendingChanges', JSON.stringify({
+      socket.emit('sendingChanges', {
         boxes: newBoxes,
-      }));
+      });
     }
   };
 

@@ -9,7 +9,8 @@ import List from './List';
 import Recorder from './Recorder';
 import socketIOClient from "socket.io-client";
 
-const socket = socketIOClient('ws://127.0.0.1:4001');
+
+const socket = socketIOClient(`ws://${window.location.host}`);
 
 const DEFAULT_POSITION = {
   top: 180,
@@ -35,6 +36,15 @@ const StyledExample = styled.div`
       left: 100px;
     }
   }
+
+  .interactionMessage {
+    position: absolute;
+    top: 20px;
+    z-index: 5;
+    left: 10px;
+    font-size: 11px;
+    color: red;
+  }
 `;
 
 
@@ -49,6 +59,7 @@ const StyledExample = styled.div`
 const Example = () => {
   const mediaRecorderIsSupported = supportsMediaRecorder();
   const [fullDisable, setDisableAll] = useState(!supportsMediaRecorder);
+  const [anotherUserIsRecording, setIsRecording] = useState(false);
   const [boxes, setBoxes] = useState([]);
   const [lists, setLists] = useState([]);
   
@@ -59,14 +70,11 @@ const Example = () => {
   }, [mediaRecorderIsSupported]);
   
   useEffect(() => {
-    socket.on('connect', () => {
+    socket.on('connect', (data) => {
       console.log('WebSocket Client Connected');
-      socket.send('Hello');
      });
      socket.on('receivingChanges', data => {
-       const res = data && JSON.parse(data) || { lists: [], boxes: [] };
-       console.log('res', res);
-       
+       const res = data || { lists: [], boxes: [] };
 
        if (res.lists) {
         setLists(res.lists);
@@ -77,19 +85,20 @@ const Example = () => {
        }
      });
      socket.on('recordingInProgress', data => {
-       const res = data && JSON.parse(data) || { recording: false };
+       const res = data || { recording: false };
 
        console.log('res', res);
        
 
        setDisableAll(res.recording);
+       setIsRecording(res.recording);
      });
      socket.on('draw_cursor', (data) => {
-      const res = JSON.parse(data);
+      const res = data;
       const el = getCursorElement(res.id) as HTMLElement;
       el.style.top = res.line[0].x;
       el.style.left = res.line[0].y;
-    })
+    });
   }, []);
 
 
@@ -123,9 +132,9 @@ const Example = () => {
       });
 
       setLists(newLists);
-      socket.emit('sendingChanges', JSON.stringify({
+      socket.emit('sendingChanges', {
         lists: newLists,
-      }));
+      });
     },
     [lists]
   );
@@ -156,10 +165,10 @@ const Example = () => {
     setLists(newLists);
     setBoxes(newBoxes);
 
-    socket.emit('sendingChanges', JSON.stringify({
+    socket.emit('sendingChanges', {
       lists: newLists,
       boxes: newBoxes,
-    }));
+    });
     return;
   };
 
@@ -175,9 +184,9 @@ const Example = () => {
       },
     ];
     setBoxes(newBoxes);
-    socket.emit('sendingChanges', JSON.stringify({
+    socket.emit('sendingChanges', {
       boxes: newBoxes,
-    }));
+    });
   };
 
   return (
@@ -198,6 +207,7 @@ const Example = () => {
       >
         Add List
       </button>
+      {anotherUserIsRecording && <p className="interactionMessage">Another user is recording</p>}
       <Container
         boxes={boxes}
         setBoxes={setBoxes}
@@ -228,9 +238,9 @@ const Example = () => {
           });
 
           setBoxes(updatedBoxes);
-          socket.emit('sendingChanges', JSON.stringify({
+          socket.emit('sendingChanges', {
             boxes: updatedBoxes,
-          }));
+          });
         };
 
         if (listId || listId === 0) {

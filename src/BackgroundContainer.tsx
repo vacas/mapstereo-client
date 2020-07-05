@@ -102,9 +102,9 @@ const Container = ({
           ];
 
           setBoxes(newBoxes);
-          socket.emit('sendingChanges', JSON.stringify({
+          socket.emit('sendingChanges', {
             boxes: newBoxes,
-          }));
+          });
         }
 
         return { type: 'container' };
@@ -126,9 +126,9 @@ const Container = ({
       ],
     });
     setBoxes(updatedBoxes);
-    socket.emit('sendingChanges', JSON.stringify({
+    socket.emit('sendingChanges', {
       boxes: updatedBoxes,
-    }));
+    });
   };
   return <StyledContainer ref={drop} />;
 };

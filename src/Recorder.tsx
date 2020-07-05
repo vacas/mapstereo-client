@@ -144,9 +144,9 @@ const Recorder = ({
 
   const startRecording = async () => {
     setDisableAll(true);
-    socket.emit('recording', JSON.stringify({
+    socket.emit('recording', {
       recording: true,
-    }));
+    });
     setDisableRecord(true);
     setDisableStop(false);
     setError('NONE');
@@ -186,9 +186,9 @@ const Recorder = ({
   const stopRecording = () => {
     if (mediaRecorder.current) {
       setDisableAll(false);
-      socket.emit('recording', JSON.stringify({
+      socket.emit('recording', {
         recording: false,
-      }));
+      });
       setDisableRecord(false);
       setDisableStop(true);
       setStatus('stopping');
