@@ -1,8 +1,9 @@
 const path = require('path');
 const express = require('express');
+const S3 = require('aws-sdk/clients/s3');
+const socketIo = require('socket.io');
 const app = express();
 const PORT = process.env.PORT || 3000;
-const socketIo = require('socket.io');
 const INDEX_PATH = '../dist';
 // const INDEX_PATH = process.env.NODE_ENV === 'production' ? '../dist' : '../public';
 let currentState = {};

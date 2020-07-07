@@ -25,6 +25,7 @@
     "@types/socket.io": "^2.1.8",
     "@types/socket.io-client": "^1.4.33",
     "audio-recorder-polyfill": "^0.3.6",
+    "aws-sdk": "^2.710.0",
     "babel-polyfill": "^6.26.0",
     "classnames": "^2.2.6",
     "es7-object-polyfill": "^1.0.1",
