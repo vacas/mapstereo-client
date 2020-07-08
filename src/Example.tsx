@@ -299,6 +299,7 @@ const Example = () => {
                 onStop={onStop}
                 blobUrl={blobUrl}
                 socket={socket}
+                title={title}
               />
             </React.Fragment>
           </Box>

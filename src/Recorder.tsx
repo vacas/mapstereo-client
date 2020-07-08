@@ -8,6 +8,7 @@ import React, {
 } from 'react';
 import cn from 'classnames';
 import styled from 'styled-components';
+import axios from 'axios';
 import { getRecorderId } from './helper';
 
 /*
@@ -49,6 +50,7 @@ interface Props {
   fullDisable?: boolean;
   playList?: boolean;
   socket?: SocketIOClient.Socket;
+  title?: string;
 }
 
 const StyledAudioWrapper = styled.section`
@@ -77,7 +79,8 @@ const Recorder = ({
   fullDisable,
   setDisableAll,
   playList,
-  socket
+  socket,
+  title
 }: Props) => {
   const [loop, setLoop] = useState(false);
   const mediaRecorderOptions = null;
@@ -159,7 +162,7 @@ const Recorder = ({
 
       mediaRecorder.current.ondataavailable = onRecordingActive;
       
-      mediaRecorder.current.onstop = onRecordingStop;
+      mediaRecorder.current.onstop = await onRecordingStop;
       mediaRecorder.current.onerror = () => {
         setError('NO_RECORDER');
         setStatus('idle');
@@ -173,10 +176,18 @@ const Recorder = ({
     mediaChunks.current.push(data);
   };
 
-  const onRecordingStop = () => {
+  const onRecordingStop = async () => {
     const blobProperty: BlobPropertyBag = { type: 'audio/wav' };
     const blob = new Blob(mediaChunks.current, blobProperty);
-    const url = URL.createObjectURL(blob);
+
+    const data = new FormData();
+    data.append('soundBlob', blob, `${title}.wav`);
+    
+    const result = await axios.post('/upload', data, {
+      headers: { "content-type": 'multipart/form-data' }
+    });
+
+    const url = result && result.data || '';
     
     setStatus('stopped');
     setMediaBlobUrl(url);

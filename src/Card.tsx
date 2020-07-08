@@ -242,6 +242,7 @@ const Card: React.FC<CardProps> = ({
         setDisableAll={setDisableAll}
         fullDisable={fullDisable}
         socket={socket}
+        title={title}
       />
       <button disabled={fullDisable} onClick={deleteCard}>
         delete

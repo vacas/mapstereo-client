@@ -1,14 +1,37 @@
+require('dotenv').config();
 const path = require('path');
 const express = require('express');
 const S3 = require('aws-sdk/clients/s3');
 const socketIo = require('socket.io');
+const bodyParser = require('body-parser');
+const multer  = require('multer');
+const upload = multer();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const INDEX_PATH = '../dist';
-// const INDEX_PATH = process.env.NODE_ENV === 'production' ? '../dist' : '../public';
 let currentState = {};
 
+const s3 = new S3({apiVersion: '2006-03-01'});
+
+app.use(bodyParser.urlencoded());
+app.use(bodyParser.json());
+
 app.use(express.static(path.join(__dirname, INDEX_PATH)));
+
+// need to add authorization bearer
+app.post('/upload', upload.single('soundBlob'), async (req, res) => {
+  await s3.upload({
+    Bucket: process.env.AWS_BUCKET,
+    Key: req.file.originalname,
+    Body: Buffer.from(new Uint8Array(req.file.buffer))
+  }, (err, data) => {
+    if (err) {
+      console.log('error: ', err);
+      res.sendStatus(404);
+    }
+    res.send(data.Location);
+  });
+})
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, `${INDEX_PATH}/index.html`));
