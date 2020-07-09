@@ -30,7 +30,7 @@ app.post('/upload', upload.single('soundBlob'), async (req, res) => {
       res.sendStatus(404);
     }
     
-    res.send(`http://${process.env.AWS_BUCKET}/${escape(req.file.originalname)}`);
+    res.send(`https://${process.env.AWS_BUCKET}/${escape(req.file.originalname)}`);
   });
 })
 
