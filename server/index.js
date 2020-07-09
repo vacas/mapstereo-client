@@ -24,12 +24,13 @@ app.post('/upload', upload.single('soundBlob'), async (req, res) => {
     Bucket: process.env.AWS_BUCKET,
     Key: req.file.originalname,
     Body: Buffer.from(new Uint8Array(req.file.buffer))
-  }, (err, data) => {
+  }, async (err, data) => {
     if (err) {
       console.log('error: ', err);
       res.sendStatus(404);
     }
-    res.send(data.Location);
+    
+    res.send(`http://${process.env.AWS_BUCKET}/${escape(req.file.originalname)}`);
   });
 })
 
