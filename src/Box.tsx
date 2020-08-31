@@ -3,20 +3,21 @@ import cn from 'classnames';
 import styled from 'styled-components';
 import { useDrag } from 'react-dnd';
 import { ItemTypes } from './ItemTypes';
+import BoxType from './types/box';
 
 interface Props {
   id: number;
   left?: number;
   top?: number;
   children: React.ReactElement;
-  isList?: boolean;
+  listId?: number;
   title?: string;
   setBoxes: Dispatch<
     SetStateAction<
-      Array<{ id: number; left: number; top: number; title: string }>
+      Array<BoxType>
     >
   >;
-  boxes: Array<{ id: number; left: number; top: number; title: string }>;
+  boxes: Array<BoxType>;
   blobUrl?: string;
   fullDisable?: boolean;
   socket?: SocketIOClient.Socket;
@@ -48,8 +49,8 @@ const Box = ({
   id,
   left,
   top,
+  listId,
   children,
-  isList,
   title,
   setBoxes,
   boxes,
@@ -64,7 +65,7 @@ const Box = ({
       top,
       title,
       blobUrl,
-      type: isList ? ItemTypes.LIST : ItemTypes.BOX,
+      type: listId || listId === 0 ? ItemTypes.LIST : ItemTypes.BOX,
     },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
@@ -89,7 +90,7 @@ const Box = ({
     <StyledBox
       ref={drag}
       className={cn({
-        isList,
+        isList: listId || listId === 0,
       })}
       style={{ left, top } as React.CSSProperties}
     >

@@ -20,17 +20,13 @@ export interface Props {
   listId?: number;
   setBoxes?: Dispatch<SetStateAction<Array<any>>>;
   boxes?: Array<any>;
-  left?: number;
-  top?: number;
-  moveCard?: (
-    dragIndex: number,
-    hoverIndex: number,
-    listId: number,
-    lists: Array<any>
-  ) => void;
   setDisableAll?: Dispatch<SetStateAction<boolean>>;
   fullDisable?: boolean;
   socket?: SocketIOClient.Socket;
+  playingList?: boolean;
+  setPlayList?: Dispatch<SetStateAction<boolean>>;
+  listItems?: Array<ListItem>;
+  children?: React.ReactChild;
 }
 
 const StyledList = styled.div`
@@ -64,19 +60,15 @@ const List = ({
   setLists,
   boxes,
   setBoxes,
-  left,
-  top,
-  moveCard,
   fullDisable,
   setDisableAll,
+  playingList,
+  setPlayList,
+  listItems,
   socket,
+  children,
 }: Props) => {
-  const [playingList, setPlayList] = useState(false);
-  const listData: { listItems: Array<ListItem> } =
-    lists && lists.length > 0 && lists.find((list) => list.id === listId);
-  const { listItems } = listData || { listItem: [{ id: 0 }] };
-
-  // if a box is dropped inside a list, box becomes into a list item and gets removed from background container
+  // if a box is dropped inside a list, box becomes into a list item and gets removed from droppable_background
   const [, drop] = useDrop({
     accept: [ItemTypes.BOX, ItemTypes.CARD],
     drop: (item: any) => {
@@ -154,7 +146,7 @@ const List = ({
     });
   };
 
-  // handles playing next clip if available
+  // event listener: handles playing next clip if available
   const playNextClip = (e) => {
     const currentId = e.currentTarget.id;
     // finds the current index in listItems
@@ -170,7 +162,7 @@ const List = ({
     return setPlayList(false);
   };
 
-  // if any item in list is paused, pause the whole list
+  // event listener: if any item in list is paused, pause the whole list
   const pauseList = (e) => {
     if (
       e.currentTarget.paused &&
@@ -206,28 +198,6 @@ const List = ({
     }
   };
 
-  const renderCard = (card: ListItem, index: number) => {
-    return (
-      <Card
-        playList={playingList}
-        left={left}
-        top={top}
-        key={card.id}
-        index={index}
-        id={card.id}
-        title={card.title}
-        blobUrl={card.blobUrl}
-        moveCard={moveCard}
-        listId={listId}
-        lists={lists}
-        setLists={setLists}
-        setDisableAll={setDisableAll}
-        fullDisable={fullDisable}
-        socket={socket}
-      />
-    );
-  };
-
   return (
     <StyledList ref={drop}>
       <button disabled={playingList || fullDisable} onClick={addItem}>
@@ -242,13 +212,7 @@ const List = ({
       >
         {playingList ? 'Stop' : 'Play'} list
       </button>
-      <div className="cardWrapper">
-        {listItems.length === 0 ? (
-          <div className="dropzone">Drop box here</div>
-        ) : (
-          listItems.map((listItem, i) => renderCard(listItem, i))
-        )}
-      </div>
+      { children }
     </StyledList>
   );
 };

@@ -143,7 +143,7 @@ const Card: React.FC<CardProps> = ({
 
       const didDrop = monitor.didDrop();
 
-      if (didDrop && type === 'container') {
+      if (didDrop && type === 'droppable_background') {
         const newLists = lists.map((list) => {
           if (list.id === listId) {
             const newList = list.listItems.filter(

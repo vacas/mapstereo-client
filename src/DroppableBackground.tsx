@@ -6,14 +6,14 @@ import maxBy from 'lodash/maxBy';
 import { useCurrentWidth, useCurrentHeight } from './helper';
 import update from 'immutability-helper';
 
-const StyledContainer = styled.div`
+const StyledDroppableBackground = styled.div`
   width: 100%;
   height: 100vh;
   border: 1px solid black;
   position: relative;
 `;
 
-const Container = ({
+const DroppableBackground = ({
   setBoxes,
   boxes,
   setDisableAll,
@@ -107,7 +107,7 @@ const Container = ({
           });
         }
 
-        return { type: 'container' };
+        return { type: 'droppable_background' };
       }
       setDisableAll(false);
     },
@@ -130,7 +130,7 @@ const Container = ({
       boxes: updatedBoxes,
     });
   };
-  return <StyledContainer ref={drop} />;
+  return <StyledDroppableBackground ref={drop} />;
 };
 
-export default Container;
+export default DroppableBackground;
