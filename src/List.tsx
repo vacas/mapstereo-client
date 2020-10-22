@@ -74,41 +74,45 @@ const List = ({
       
       if (item.type === 'card') {
         const listIndex = boxes.findIndex(box => box.id === id);
-        const cardIndex = boxes.findIndex(box => box.id === item.id);
-
+        
+        
         console.log('listIndex', listIndex);
-
+        
         console.log('item.id', item.id);
         console.log('boxes[listIndex]', boxes[listIndex]);
         
         console.log('before adding cards - boxes', boxes);
         
-
-        let newBoxes = update(boxes, {
-          [listIndex]: {
-            cards: { 
-              $push: [item.id]
+        if (!boxes[listIndex].cards.includes(item.id)) {
+          const cardIndex = boxes.findIndex(box => box.id === item.id);
+          let newBoxes;
+          newBoxes = update(boxes, {
+            [listIndex]: {
+              cards: { 
+                $push: [item.id]
+              }
             }
-          }
-        });
+          });
+          
+          console.log('after adding cards - newBoxes', newBoxes);
+  
+          newBoxes = update(newBoxes, {
+            [cardIndex]: {
+              $apply: (box) => ({
+                ...box,
+                isListItem: true,
+              })
+            }
+          });
+  
+          console.log('was dragged into list');
+          
+          console.log('after setting to listItem - newBoxes', newBoxes);
+          
+          
+          updateBoxes(newBoxes);
+        }
 
-        console.log('after adding cards - newBoxes', newBoxes);
-
-        newBoxes = update(newBoxes, {
-          [cardIndex]: {
-            $apply: (box) => ({
-              ...box,
-              isListItem: true,
-            })
-          }
-        });
-
-        console.log('was dragged into list');
-        
-        console.log('after setting to listItem - newBoxes', newBoxes);
-        
-        
-        updateBoxes(newBoxes);
         setDisableAll(false);
 
         return { type: 'list' };
@@ -126,7 +130,8 @@ const List = ({
     const newId = highestID.id + 1;
 
     console.log('newId', newId);
-    
+
+    console.log('boxes inside addItem', boxes);
 
     let newBoxes = update(boxes, {$push: [{
         type: 'card',
@@ -141,6 +146,9 @@ const List = ({
     newBoxes = update(newBoxes, {
       [id]: { cards: { $push: [newId]} }
     });
+
+    console.log('newBoxes inside addItem', newBoxes);
+    
 
     updateBoxes(newBoxes);
   };

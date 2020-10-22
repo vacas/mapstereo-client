@@ -113,7 +113,7 @@ const Card: React.FC<CardProps> = ({
       console.log('item', item);
       
       // Time to actually perform the action
-      moveCard(dragIndex, hoverIndex, id);
+      moveCard(dragIndex, hoverIndex, Number(item.id));
 
       // Note: we're mutating the monitor item here!
       // Generally it's better to avoid mutations,

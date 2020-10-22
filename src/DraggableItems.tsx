@@ -1,4 +1,5 @@
 import React, { useState, Dispatch, SetStateAction } from 'react';
+import update from 'immutability-helper';
 import List from './List';
 import Recorder from './Recorder';
 import BoxType from './types/box';
@@ -74,7 +75,23 @@ const InternalBox = ({
 
           return false;
         }) || [];
-    
+
+      let listItemsSorted = [];      
+
+      // sorting listItems
+      if (listItems && listItems.length > 0) {
+        for (let i = 0; i < cards.length; i++) {
+          const cardId = cards[i];
+          const cardObj = listItems.find(listItem => listItem.id === cardId);
+          console.log('cardObj', cardObj);
+          
+          if (cardObj) {
+            listItemsSorted = update(listItemsSorted, {
+              $push: [{...cardObj}]
+            })
+          }
+        }
+      }
 
     return (
       <DraggableContainer
@@ -89,7 +106,7 @@ const InternalBox = ({
           fullDisable={fullDisable}
           updateBoxes={updateBoxes}
           boxes={boxes}
-          listItems={listItems}
+          listItems={listItemsSorted}
           setPlayList={setPlayList}
           playingList={playingList}
         />

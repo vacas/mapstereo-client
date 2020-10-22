@@ -40,9 +40,6 @@ const DroppableBackground = ({
   const [, drop] = useDrop({
     accept: [ItemTypes.BOX, ItemTypes.CARD, ItemTypes.LIST],
     drop(item: any, monitor) {
-
-      console.log('item', item);
-      
       if (item.type === 'box' || item.type === 'list' || (item.type === 'card' && !item.isListItem)) {
         const delta = monitor.getDifferenceFromInitialOffset();
 
