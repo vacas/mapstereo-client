@@ -1,3 +1,4 @@
+require('dotenv').config();
 const webpack = require('webpack');
 const path = require('path');
 const socketIo = require('socket.io');
@@ -8,6 +9,8 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const s3 = new S3({apiVersion: '2006-03-01'});
+
+console.log('process.env.AWS_BUCKET', process.env.AWS_BUCKET);
 
 module.exports = {
   entry: {

@@ -1,12 +1,12 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import update from 'immutability-helper';
 import socketIOClient from 'socket.io-client';
 import { getCursorElement, supportsMediaRecorder } from './helper';
 import maxBy from 'lodash/maxBy';
 import DroppableBackground from './DroppableBackground';
-import InternalBox from './InternalBox';
-import Box from './Box';
+import DraggableItems from './DraggableItems';
+import Box from './types/box';
 
 const socket = socketIOClient(
   `${process.env.NODE_ENV === 'production' ? 'wss' : 'ws'}://${
@@ -62,10 +62,14 @@ const StyledApp = styled.div`
 
 /*
   TODO LIST:
+  - Refactor architecture of types 'cards' and 'lists'; these will be different types, and boxes or dragged content will be the encapsulating name for these types, for now
   - Make custom state for setBoxes and setLists to clean up socket.emit (https://dev.to/filippofilip95/i-replaced-usestate-hook-with-custom-one-3dn1)
   - Enhance move card experience
   - emit message on socket to block box or card if it is being recorded on another side (currently blocks all buttons)
   - display cursor (https://stackoverflow.com/questions/34162200/displaying-cursor-on-every-connected-client-in-socket-io)
+
+
+  Need to add drag and drop within lists and clean up
 */
 
 const App = () => {
@@ -73,7 +77,7 @@ const App = () => {
   const [fullDisable, setDisableAll] = useState(!supportsMediaRecorder);
   const [anotherUserIsRecording, setIsRecording] = useState(false);
   const [boxes, setBoxes] = useState([]);
-  const [lists, setLists] = useState([]);
+  // const [lists, setLists] = useState([]);
 
   useEffect(() => {
     if (!mediaRecorderIsSupported) {
@@ -89,7 +93,7 @@ const App = () => {
       const res = data || { lists: [], boxes: [] };
 
       if (res.lists) {
-        setLists(res.lists);
+        // setLists(res.lists);
       }
 
       if (res.boxes) {
@@ -112,73 +116,35 @@ const App = () => {
     });
   }, []);
 
-  const moveCard = useCallback(
-    (
-      dragIndex: number,
-      hoverIndex: number,
-      listId: number,
-      lists: Array<any>
-    ) => {
-      const listData =
-        lists && lists.length > 0 && lists.find((list) => list.id === listId);
-      const dragCard = listData.listItems[dragIndex];
-
-      const newLists = lists.map((list) => {
-        if (list.id === listId) {
-          const reorganizedListItems = update(list.listItems, {
-            $splice: [
-              [dragIndex, 1],
-              [hoverIndex, 0, dragCard],
-            ],
-          });
-
-          return {
-            ...list,
-            listItems: reorganizedListItems,
-          };
-        }
-
-        return list;
-      });
-
-      setLists(newLists);
-      socket.emit('sendingChanges', {
-        lists: newLists,
-      });
-    },
-    [lists]
-  );
-
+  // NEED TO DISTIGUISH THE DIFFERENCE BETWEEN A BOX THAT IS A LIST AND A CARD THAT IS PART OF A LIST
   const addList = () => {
     const maxBoxId = maxBy(boxes, 'id');
-    const maxListId = maxBy(lists, 'id');
+    // const maxListId = maxBy(lists, 'id');
     const boxId = !maxBoxId ? 0 : maxBoxId.id + 1;
-    const listId = !maxListId ? 0 : maxListId.id + 1;
-    const newLists = [
-      ...lists,
-      {
-        id: listId,
-        boxId,
-        listItems: [],
-      },
-    ];
+    // const listId = !maxListId ? 0 : maxListId.id + 1;
+    // const newLists = [
+    //   ...lists,
+    //   {
+    //     id: listId,
+    //     boxId,
+    //     listItems: [],
+    //   },
+    // ];
     const newBoxes = [
       ...boxes,
       {
+        type: 'list',
         id: boxId,
         title: `box #${boxId}`,
+        cards: [],
+        // list should only know about the cards position and not content; maybe make a state for list?
+        // cards: [{
+        //   id: 0
+        // }],
         ...LIST_DEFAULT_POSITION,
-        listId,
       },
     ];
-
-    setLists(newLists);
-    setBoxes(newBoxes);
-
-    socket.emit('sendingChanges', {
-      lists: newLists,
-      boxes: newBoxes,
-    });
+    updateBoxes(newBoxes);
     return;
   };
 
@@ -188,16 +154,26 @@ const App = () => {
     const newBoxes = [
       ...boxes,
       {
+        type: 'card',
         id: boxId,
         title: `box #${boxId}`,
+        isListItem: false,
         ...DEFAULT_POSITION,
       },
     ];
-    setBoxes(newBoxes);
+    updateBoxes(newBoxes);
+  };
+
+  const updateBoxes = (updatedBoxes: Array<Box>): void => {
+    setBoxes(updatedBoxes);
     socket.emit('sendingChanges', {
-      boxes: newBoxes,
+      boxes: updatedBoxes,
     });
   };
+
+  /*
+    Add box, add list and add card should all come from the same function, passing in the new id and specifying the type in the parameters; if a card should be a part of a list, it should just be added to the cards array in the list type object. This also applies to deleting these same types. Think of the composite pattern and follow suit.
+  */
 
   return (
     <StyledApp>
@@ -222,34 +198,21 @@ const App = () => {
       )}
       <DroppableBackground
         boxes={boxes}
-        setBoxes={setBoxes}
-        fullDisable={fullDisable}
+        updateBoxes={updateBoxes}
         setDisableAll={setDisableAll}
-        socket={socket}
       />
-      {boxes.map(box => (
-            <Box
-              key={box.id}
-              {...box}
-              setBoxes={setBoxes}
-              boxes={boxes}
-              fullDisable={fullDisable}
-              socket={socket}
-            >
-              <InternalBox
-                setDisableAll={setDisableAll}
-                fullDisable={fullDisable}
-                setLists={setLists}
-                lists={lists}
-                box={box}
-                setBoxes={setBoxes}
-                boxes={boxes}
-                moveCard={moveCard}
-                socket={socket}
-              />
-            </Box>
-          )
-      )}
+      {boxes.map((box) => (
+        <DraggableItems
+          key={box.id}
+          setDisableAll={setDisableAll}
+          fullDisable={fullDisable}
+          updateBoxes={updateBoxes}
+          box={box}
+          setBoxes={setBoxes}
+          boxes={boxes}
+          socket={socket}
+        />
+      ))}
     </StyledApp>
   );
 };

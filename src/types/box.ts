@@ -3,8 +3,10 @@ type Box = {
   left: number;
   top: number;
   title: string;
-  blobUrl: string;
-  listId?: number;
+  blobUrl?: string;
+  type: string;
+  isListItem?: boolean;
+  cards?: Array<number>;
 }
 
 export default Box;

@@ -5,23 +5,22 @@ import { XYCoord } from 'dnd-core';
 import styled from 'styled-components';
 import { ItemTypes } from './ItemTypes';
 import Recorder from './Recorder';
+import update from 'immutability-helper';
 
 export interface CardProps {
   id: any;
   title: string;
   index: number;
-  listId: number;
   left?: number;
   top?: number;
   blobUrl?: string;
   moveCard: (
     dragIndex: number,
     hoverIndex: number,
-    listId: number,
-    lists: Array<any>
+    cardId: number
   ) => void;
-  lists: Array<any>;
-  setLists?: Dispatch<SetStateAction<Array<any>>>;
+  boxes: Array<any>;
+  updateBoxes?: Dispatch<SetStateAction<Array<any>>>;
   setDisableAll?: Dispatch<SetStateAction<boolean>>;
   fullDisable?: boolean;
   playList: boolean;
@@ -58,12 +57,11 @@ const Card: React.FC<CardProps> = ({
   id,
   title,
   index,
-  listId,
   moveCard,
   left,
   top,
-  lists,
-  setLists,
+  boxes,
+  updateBoxes,
   blobUrl,
   fullDisable,
   playList,
@@ -112,8 +110,10 @@ const Card: React.FC<CardProps> = ({
         return;
       }
 
+      console.log('item', item);
+      
       // Time to actually perform the action
-      moveCard(dragIndex, hoverIndex, listId, lists);
+      moveCard(dragIndex, hoverIndex, id);
 
       // Note: we're mutating the monitor item here!
       // Generally it's better to avoid mutations,
@@ -128,7 +128,7 @@ const Card: React.FC<CardProps> = ({
       type: ItemTypes.CARD,
       id,
       index,
-      listId,
+      // listId,
       title,
       top,
       left,
@@ -143,82 +143,107 @@ const Card: React.FC<CardProps> = ({
 
       const didDrop = monitor.didDrop();
 
+      // when dropped outside of list, this is removes from list
       if (didDrop && type === 'droppable_background') {
-        const newLists = lists.map((list) => {
-          if (list.id === listId) {
-            const newList = list.listItems.filter(
-              (listItem) => listItem.id !== id
-            );
-
-            return {
-              ...list,
-              listItems: newList,
-            };
+        // this should remove this card from the listItems of list
+        const listIndex = boxes.findIndex(box => {
+          if (box.type === 'list' && box.cards.includes(id)) {
+            return true;
           }
 
-          return list;
+          return false;
+        });
+        const cardIndex = boxes.findIndex(box => box.id === id);
+
+        let newBoxes = update(boxes, {
+          [listIndex]: {
+            cards: { $set: boxes[listIndex].cards.filter(cardId => cardId !== id)
+          }}
         });
 
-        setLists(newLists);
-        socket.emit('sendingChanges', {
-          lists: newLists,
+        newBoxes = update(newBoxes, {
+          [cardIndex]: {
+            isListItem: {$apply: () => false}
+          }
         });
+        
+        // const newBoxes = lists.map((list) => {
+        //   if (list.id === listId) {
+        //     const newList = list.listItems.filter(
+        //       (listItem) => listItem.id !== id
+        //     );
+
+        //     return {
+        //       ...list,
+        //       listItems: newList,
+        //     };
+        //   }
+
+        //   return list;
+        // });
+
+        updateBoxes(newBoxes);
+        // socket.emit('sendingChanges', {
+        //   lists: newBoxes,
+        // });
       }
     },
   });
 
+  // this should save to card data, not list
   const saveUrlToList = (url) => {
-    const updatedLists = lists.map((list) => {
-      if (list.id === listId) {
-        const newList = list.listItems.map((listItem) => {
-          if (listItem.id === id) {
-            return {
-              ...listItem,
-              blobUrl: url,
-            };
-          }
+    // const updatedLists = lists.map((list) => {
+    //   if (list.id === listId) {
+    //     const newList = list.listItems.map((listItem) => {
+    //       if (listItem.id === id) {
+    //         return {
+    //           ...listItem,
+    //           blobUrl: url,
+    //         };
+    //       }
 
-          return listItem;
-        });
+    //       return listItem;
+    //     });
 
-        return {
-          ...list,
-          listItems: newList,
-        };
-      }
+    //     return {
+    //       ...list,
+    //       listItems: newList,
+    //     };
+    //   }
 
-      return list;
-    });
+    //   return list;
+    // });
 
-    setLists(updatedLists);
-    socket.emit('sendingChanges', {
-      lists: updatedLists,
-    });
+    // setLists(updatedLists);
+    // socket.emit('sendingChanges', {
+    //   lists: updatedLists,
+    // });
   };
 
+  // this should remove card from list and card itself from "boxes"
   const deleteCard = () => {
-    const confirmed = confirm(`Are you sure you want to delete "${title}"?`);
-    if (confirmed) {
-      const newLists = lists.map((list) => {
-        if (list.id === listId) {
-          const newList = list.listItems.filter(
-            (listItem) => listItem.id !== id
-          );
+    // const confirmed = confirm(`Are you sure you want to delete "${title}"?`);
+    // if (confirmed) {
+    //   const newBoxes = lists.map((list) => {
+    //     if (list.id === listId) {
+    //       const newList = list.listItems.filter(
+    //         (listItem) => listItem.id !== id
+    //       );
 
-          return {
-            ...list,
-            listItems: newList,
-          };
-        }
+    //       return {
+    //         ...list,
+    //         listItems: newList,
+    //       };
+    //     }
 
-        return list;
-      });
+    //     return list;
+    //   });
 
-      setLists(newLists);
-      socket.emit('sendingChanges', {
-        lists: newLists,
-      });
-    }
+    //   setLists(newBoxes);
+    //   socket.emit('sendingChanges', {
+    //     lists: newBoxes,
+    //   });
+    // }
   };
 
   drag(drop(ref));
@@ -234,7 +259,7 @@ const Card: React.FC<CardProps> = ({
       <Recorder
         playList={playList}
         cardId={id}
-        listId={listId}
+        // listId={listId}
         onStop={(url) => {
           saveUrlToList(url);
         }}

@@ -4,6 +4,7 @@ import { useDrop } from 'react-dnd';
 import { ItemTypes } from './ItemTypes';
 import maxBy from 'lodash/maxBy';
 import { useCurrentWidth, useCurrentHeight } from './helper';
+import BoxType from './types/box';
 import update from 'immutability-helper';
 
 const StyledDroppableBackground = styled.div`
@@ -14,33 +15,13 @@ const StyledDroppableBackground = styled.div`
 `;
 
 const DroppableBackground = ({
-  setBoxes,
+  updateBoxes,
   boxes,
   setDisableAll,
-  socket,
-  fullDisable,
 }: {
-  setBoxes: Dispatch<
-    SetStateAction<
-      Array<{
-        id: number;
-        left: number;
-        top: number;
-        title: string;
-        blobUrl: string;
-      }>
-    >
-  >;
-  boxes: Array<{
-    id: number;
-    left: number;
-    top: number;
-    title: string;
-    blobUrl: string;
-  }>;
+  updateBoxes: (boxes: Array<BoxType>) => void;
+  boxes: Array<BoxType>;
   setDisableAll: Dispatch<SetStateAction<boolean>>;
-  socket?: SocketIOClient.Socket;
-  fullDisable?: boolean;
 }) => {
   const width = useCurrentWidth();
   const height = useCurrentHeight();
@@ -59,7 +40,10 @@ const DroppableBackground = ({
   const [, drop] = useDrop({
     accept: [ItemTypes.BOX, ItemTypes.CARD, ItemTypes.LIST],
     drop(item: any, monitor) {
-      if (item.type === 'box' || item.type === 'list') {
+
+      console.log('item', item);
+      
+      if (item.type === 'box' || item.type === 'list' || (item.type === 'card' && !item.isListItem)) {
         const delta = monitor.getDifferenceFromInitialOffset();
 
         if (delta) {
@@ -72,9 +56,7 @@ const DroppableBackground = ({
         }
       }
 
-      if (item.type === 'card') {
-        const maxBoxId = maxBy(boxes, 'id');
-
+      if (item.type === 'card' && item.isListItem) {
         const delta = monitor.getClientOffset();
 
         if (delta && item.ref && item.ref.current) {
@@ -90,21 +72,43 @@ const DroppableBackground = ({
           const left = delta.x - (approxWidth + xPadding) / 2;
           // top left corner minus half of the height of item
           const top = delta.y - (approxHeight + yPadding) / 2;
-          const newBoxes = [
-            ...boxes,
-            {
-              id: maxBoxId ? maxBoxId.id + 1 : boxes.length + 1,
-              left,
-              top,
-              title: item.title,
-              blobUrl: item.blobUrl,
-            },
-          ];
 
-          setBoxes(newBoxes);
-          socket.emit('sendingChanges', {
-            boxes: newBoxes,
+          const cardIndex = boxes.findIndex(box => box.id === item.id);
+          let newBoxes = boxes;
+
+          if (cardIndex !== -1 && boxes[cardIndex].isListItem) {
+            const listIndex = boxes.findIndex(box => {
+              if (box.type === 'list' && box.cards.includes(item.id)) {
+                return true;
+              }
+    
+              return false;
+            });
+
+            newBoxes = update(newBoxes, {
+              [listIndex]: {
+                cards: {
+                  $set: newBoxes[listIndex].cards.filter(cardId => cardId !== item.id)
+                }
+              }
+            })
+          }
+          
+          newBoxes = update(newBoxes, {
+            [cardIndex]: {
+              $set: {
+                id: item.id,
+                left,
+                top,
+                blobUrl: item.blobUrl,
+                type: item.type,
+                title: item.title,
+                isListItem: false,
+              }
+            }
           });
+
+          updateBoxes(newBoxes);
         }
 
         return { type: 'droppable_background' };
@@ -125,10 +129,7 @@ const DroppableBackground = ({
         }),
       ],
     });
-    setBoxes(updatedBoxes);
-    socket.emit('sendingChanges', {
-      boxes: updatedBoxes,
-    });
+    updateBoxes(updatedBoxes);
   };
   return <StyledDroppableBackground ref={drop} />;
 };

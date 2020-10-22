@@ -1,26 +1,19 @@
-import React, { Dispatch, SetStateAction } from 'react';
+import React, { useState } from 'react';
 import cn from 'classnames';
 import styled from 'styled-components';
+import { Check, Edit } from 'react-feather';
 import { useDrag } from 'react-dnd';
-import { ItemTypes } from './ItemTypes';
-import BoxType from './types/box';
 
 interface Props {
   id: number;
   left?: number;
   top?: number;
-  children: React.ReactElement;
-  listId?: number;
+  children?: React.ReactElement;
+  type?: string;
   title?: string;
-  setBoxes: Dispatch<
-    SetStateAction<
-      Array<BoxType>
-    >
-  >;
-  boxes: Array<BoxType>;
   blobUrl?: string;
   fullDisable?: boolean;
-  socket?: SocketIOClient.Socket;
+  deleteBox?: Function;
 }
 
 const StyledBox = styled.div`
@@ -45,19 +38,20 @@ const StyledBox = styled.div`
   }
 `;
 
-const Box = ({
+const DraggableContainer = ({
   id,
   left,
   top,
-  listId,
+  type,
   children,
   title,
-  setBoxes,
-  boxes,
+  deleteBox,
   blobUrl,
   fullDisable,
-  socket,
 }: Props) => {
+  const [edit, setEdit] = useState(false);
+  const [editedTitle, setEditedTitle] = useState(title);
+
   const [{ isDragging }, drag] = useDrag({
     item: {
       id,
@@ -65,7 +59,7 @@ const Box = ({
       top,
       title,
       blobUrl,
-      type: listId || listId === 0 ? ItemTypes.LIST : ItemTypes.BOX,
+      type,
     },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
@@ -75,31 +69,39 @@ const Box = ({
     return <div ref={drag} />;
   }
 
-  const deleteBox = () => {
-    const confirmed = confirm(`Are you sure you want to delete "${title}"?`);
-    if (confirmed) {
-      const newBoxes = boxes.filter((box) => box.id !== id);
-      setBoxes(newBoxes);
-      socket.emit('sendingChanges', {
-        boxes: newBoxes,
-      });
-    }
-  };
-
   return (
     <StyledBox
       ref={drag}
       className={cn({
-        isList: listId || listId === 0,
+        isList: type === 'list',
       })}
       style={{ left, top } as React.CSSProperties}
     >
+      {!edit ? (
+        <React.Fragment>
+          {title}{' '}
+          <span className="icons" onClick={() => setEdit(true)}>
+            <Edit size={12} />
+          </span>
+        </React.Fragment>
+      ) : (
+        <React.Fragment>
+          <input
+            type="text"
+            value={editedTitle}
+            onChange={(e) => setEditedTitle(e.target.value)}
+          />{' '}
+          <span className="icons" onClick={() => setEdit(false)}>
+            <Check size={12} />
+          </span>
+        </React.Fragment>
+      )}
       <div className="child">{children}</div>
-      <button disabled={fullDisable} onClick={deleteBox}>
+      <button disabled={fullDisable} onClick={() => deleteBox(id)}>
         delete
       </button>
     </StyledBox>
   );
 };
 
-export default Box;
+export default DraggableContainer;

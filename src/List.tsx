@@ -1,10 +1,12 @@
-import React, { useState, Dispatch, SetStateAction } from 'react';
+import React, { useState, Dispatch, SetStateAction, useCallback } from 'react';
 import { useDrop } from 'react-dnd';
 import styled from 'styled-components';
 import Card from './Card';
 import { ItemTypes } from './ItemTypes';
 import maxBy from 'lodash/maxBy';
 import { getRecorderId } from './helper';
+import BoxType from './types/box';
+import update from 'immutability-helper';
 
 export interface ListItem {
   id?: number;
@@ -15,18 +17,16 @@ export interface ListItem {
 
 export interface Props {
   drop?: any;
-  setLists?: Dispatch<SetStateAction<Array<any>>>;
-  lists?: Array<any>;
-  listId?: number;
-  setBoxes?: Dispatch<SetStateAction<Array<any>>>;
-  boxes?: Array<any>;
+  updateBoxes?: (boxes: Array<BoxType>) => void;
+  boxes?: Array<BoxType>;
   setDisableAll?: Dispatch<SetStateAction<boolean>>;
   fullDisable?: boolean;
-  socket?: SocketIOClient.Socket;
   playingList?: boolean;
   setPlayList?: Dispatch<SetStateAction<boolean>>;
   listItems?: Array<ListItem>;
-  children?: React.ReactChild;
+  left?: number;
+  top?: number;
+  id?: number;
 }
 
 const StyledList = styled.div`
@@ -55,56 +55,60 @@ const getCurrentIndex = (currentId, listItems) => {
 };
 
 const List = ({
-  lists,
-  listId,
-  setLists,
+  updateBoxes,
   boxes,
-  setBoxes,
   fullDisable,
   setDisableAll,
   playingList,
   setPlayList,
   listItems,
-  socket,
-  children,
+  left,
+  top,
+  id
 }: Props) => {
   // if a box is dropped inside a list, box becomes into a list item and gets removed from droppable_background
   const [, drop] = useDrop({
-    accept: [ItemTypes.BOX, ItemTypes.CARD],
+    accept: [ItemTypes.CARD],
     drop: (item: any) => {
-      if (item.type === 'box' && !item.Component) {
-        const highestID = maxBy(listItems, 'id');
+      console.log('drop item on list', item);
+      
+      if (item.type === 'card') {
+        const listIndex = boxes.findIndex(box => box.id === id);
+        const cardIndex = boxes.findIndex(box => box.id === item.id);
 
-        const newId = !highestID ? 0 : highestID.id + 1;
+        console.log('listIndex', listIndex);
 
-        const newLists = lists.map((list) => {
-          if (list.id === listId) {
-            return {
-              ...list,
-              listItems: [
-                ...list.listItems,
-                {
-                  id: newId,
-                  title: item.title,
-                  listId,
-                  blobUrl: item.blobUrl,
-                },
-              ],
-            };
+        console.log('item.id', item.id);
+        console.log('boxes[listIndex]', boxes[listIndex]);
+        
+        console.log('before adding cards - boxes', boxes);
+        
+
+        let newBoxes = update(boxes, {
+          [listIndex]: {
+            cards: { 
+              $push: [item.id]
+            }
           }
-
-          return list;
-        });
-        const newBoxes = [...boxes.filter((box) => box.id !== item.id)];
-
-        setLists(newLists);
-        setBoxes(newBoxes);
-
-        socket.emit('sendingChanges', {
-          boxes: newBoxes,
-          lists: newLists,
         });
 
+        console.log('after adding cards - newBoxes', newBoxes);
+
+        newBoxes = update(newBoxes, {
+          [cardIndex]: {
+            $apply: (box) => ({
+              ...box,
+              isListItem: true,
+            })
+          }
+        });
+
+        console.log('was dragged into list');
+        
+        console.log('after setting to listItem - newBoxes', newBoxes);
+        
+        
+        updateBoxes(newBoxes);
         setDisableAll(false);
 
         return { type: 'list' };
@@ -115,35 +119,90 @@ const List = ({
   });
 
   // adds new list item
+  // NEED TO ADD BOX AND APPEND ID TO CARDS ARRAY IN LIST
   const addItem = () => {
-    const highestID = maxBy(listItems, 'id');
+    const highestID = maxBy(boxes, 'id');
 
-    const newId = !highestID ? 0 : highestID.id + 1;
+    const newId = highestID.id + 1;
 
-    const newLists = lists.map((list) => {
-      if (list.id === listId) {
-        const newList = [
-          ...list.listItems,
-          {
-            id: newId,
-            title: `Card Item #${newId}`,
-            listId,
-          },
-        ];
+    console.log('newId', newId);
+    
 
-        return {
-          ...list,
-          listItems: newList,
-        };
+    let newBoxes = update(boxes, {$push: [{
+        type: 'card',
+        top,
+        left,
+        id: newId,
+        title: `box #${newId}`,
+        isListItem: true,
+        blobUrl: undefined,
+      }]})
+
+    newBoxes = update(newBoxes, {
+      [id]: { cards: { $push: [newId]} }
+    });
+
+    updateBoxes(newBoxes);
+  };
+
+  const moveCard = (
+    dragIndex: number,
+    hoverIndex: number,
+    cardId: number
+  ) => {
+    const listIndex = boxes.findIndex(box => {
+      if (box.type === 'list' && box.cards.includes(cardId)) {
+        return true;
       }
 
-      return list;
+      return false;
+    })
+
+    const newBoxes = update(boxes, {
+      [listIndex]: {
+        cards: {
+          $splice: [
+            [dragIndex, 1],
+            [hoverIndex, 0, cardId],
+          ],
+        }
+      }
     });
 
-    setLists(newLists);
-    socket.emit('sendingChanges', {
-      lists: newLists,
-    });
+    console.log('boxes', boxes);
+    console.log('newBoxes', newBoxes);
+    console.log('dragIndex', dragIndex);
+    console.log('hoverIndex', hoverIndex);
+    console.log('cardId', cardId);
+    console.log('listIndex', listIndex);
+    console.log('boxes[listIndex]', boxes[listIndex]);
+    
+    
+    
+
+    updateBoxes(newBoxes);
+    // const listData =
+    // lists && lists.length > 0 && lists.find((list) => list.id === listId);
+    // const dragCard = listData.listItems[dragIndex];
+    // const newLists = lists.map((list) => {
+    //   if (list.id === listId) {
+    //     const reorganizedListItems = update(list.listItems, {
+    //       $splice: [
+    //         [dragIndex, 1],
+    //         [hoverIndex, 0, dragCard],
+    //       ],
+    //     });
+    //     return {
+    //       ...list,
+    //       listItems: reorganizedListItems,
+    //     };
+    //   }
+    //   return list;
+    // });
+    // setLists(newLists);
+    // socket.emit('sendingChanges', {
+    //   // lists: newLists,
+    // });
   };
 
   // event listener: handles playing next clip if available
@@ -212,7 +271,29 @@ const List = ({
       >
         {playingList ? 'Stop' : 'Play'} list
       </button>
-      { children }
+      <div className="cardWrapper">
+        {listItems.length === 0 ? (
+          <div className="dropzone">Drop box here</div>
+        ) : (
+          listItems.map((listItem, i) => (
+              <Card
+                boxes={boxes}
+                playList={playingList}
+                left={left}
+                top={top}
+                key={listItem.id}
+                index={i}
+                id={listItem.id}
+                title={listItem.title}
+                blobUrl={listItem.blobUrl}
+                moveCard={moveCard}
+                setDisableAll={setDisableAll}
+                updateBoxes={updateBoxes}
+                fullDisable={fullDisable}
+              />
+            ))
+        )}
+      </div>
     </StyledList>
   );
 };
