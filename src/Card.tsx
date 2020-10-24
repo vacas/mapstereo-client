@@ -6,6 +6,7 @@ import styled from 'styled-components';
 import { ItemTypes } from './ItemTypes';
 import Recorder from './Recorder';
 import update from 'immutability-helper';
+import DraggableContainer from './DraggableContainer';
 
 export interface CardProps {
   id: any;
@@ -20,17 +21,22 @@ export interface CardProps {
     cardId: number
   ) => void;
   boxes: Array<any>;
+  isListItem?: boolean;
   updateBoxes?: Dispatch<SetStateAction<Array<any>>>;
   setDisableAll?: Dispatch<SetStateAction<boolean>>;
   fullDisable?: boolean;
   playList: boolean;
   socket?: SocketIOClient.Socket;
+  onStop: Dispatch<SetStateAction<string>>;
+  deleteBox?: Function;
+  type: string;
 }
 
 interface DragItem {
   index: number;
   id: string;
   type: string;
+  isListItem: boolean;
 }
 
 const StyledCard = styled.div`
@@ -61,18 +67,22 @@ const Card: React.FC<CardProps> = ({
   left,
   top,
   boxes,
+  isListItem,
   updateBoxes,
   blobUrl,
   fullDisable,
   playList,
   setDisableAll,
   socket,
+  onStop,
+  deleteBox,
+  type,
 }: CardProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const [, drop] = useDrop({
     accept: ItemTypes.CARD,
     hover(item: DragItem, monitor: DropTargetMonitor) {
-      if (!ref.current) {
+      if (!ref.current || !item || !item.isListItem) {
         return;
       }
       const dragIndex = item.index;
@@ -110,8 +120,6 @@ const Card: React.FC<CardProps> = ({
         return;
       }
 
-      console.log('item', item);
-      
       // Time to actually perform the action
       moveCard(dragIndex, hoverIndex, Number(item.id));
 
@@ -129,6 +137,7 @@ const Card: React.FC<CardProps> = ({
       id,
       index,
       // listId,
+      isListItem,
       title,
       top,
       left,

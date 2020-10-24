@@ -85,7 +85,6 @@ export const getRecorderId = (
 
   export const isArrayEqual = (x, y) => {
     const diff = _(x).differenceWith(y, _.isEqual);
-    console.log('diff', diff);
     
     return diff.isEmpty();
   };

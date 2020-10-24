@@ -109,6 +109,8 @@ const InternalBox = ({
           listItems={listItemsSorted}
           setPlayList={setPlayList}
           playingList={playingList}
+          deleteBox={deleteBox}
+          onStop={onStop}
         />
       </DraggableContainer>
     );

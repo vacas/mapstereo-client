@@ -13,10 +13,13 @@ export interface ListItem {
   title?: string;
   listId?: number;
   blobUrl?: string;
+  isListItem?: boolean;
+  type?: string;
 }
 
 export interface Props {
   drop?: any;
+  deleteBox?: Function;
   updateBoxes?: (boxes: Array<BoxType>) => void;
   boxes?: Array<BoxType>;
   setDisableAll?: Dispatch<SetStateAction<boolean>>;
@@ -27,6 +30,7 @@ export interface Props {
   left?: number;
   top?: number;
   id?: number;
+  onStop: Dispatch<SetStateAction<string>>;
 }
 
 const StyledList = styled.div`
@@ -64,7 +68,9 @@ const List = ({
   listItems,
   left,
   top,
-  id
+  id,
+  onStop,
+  deleteBox
 }: Props) => {
   // if a box is dropped inside a list, box becomes into a list item and gets removed from droppable_background
   const [, drop] = useDrop({
@@ -105,11 +111,6 @@ const List = ({
             }
           });
   
-          console.log('was dragged into list');
-          
-          console.log('after setting to listItem - newBoxes', newBoxes);
-          
-          
           updateBoxes(newBoxes);
         }
 
@@ -294,10 +295,14 @@ const List = ({
                 id={listItem.id}
                 title={listItem.title}
                 blobUrl={listItem.blobUrl}
+                type={listItem.type}
                 moveCard={moveCard}
                 setDisableAll={setDisableAll}
                 updateBoxes={updateBoxes}
                 fullDisable={fullDisable}
+                isListItem={listItem.isListItem}
+                onStop={onStop}
+                deleteBox={deleteBox}
               />
             ))
         )}
