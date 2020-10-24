@@ -38,7 +38,7 @@ const StyledApp = styled.div`
     left: 0;
 
     &#addList {
-      left: 100px;
+      left: 80px;
     }
   }
 
@@ -77,24 +77,22 @@ const App = () => {
   const [fullDisable, setDisableAll] = useState(!supportsMediaRecorder);
   const [anotherUserIsRecording, setIsRecording] = useState(false);
   const [boxes, setBoxes] = useState([]);
-  // const [lists, setLists] = useState([]);
 
+  // if mediaRecorder is not supported, then set alert
   useEffect(() => {
     if (!mediaRecorderIsSupported) {
       alert('User Media API not supported.');
     }
   }, [mediaRecorderIsSupported]);
 
+
+  // all socket responses handled here
   useEffect(() => {
     socket.on('connect', (data) => {
       console.log('WebSocket Client Connected');
     });
     socket.on('receivingChanges', (data) => {
       const res = data || { lists: [], boxes: [] };
-
-      if (res.lists) {
-        // setLists(res.lists);
-      }
 
       if (res.boxes) {
         setBoxes(res.boxes);
@@ -116,50 +114,16 @@ const App = () => {
     });
   }, []);
 
-  // NEED TO DISTIGUISH THE DIFFERENCE BETWEEN A BOX THAT IS A LIST AND A CARD THAT IS PART OF A LIST
-  const addList = () => {
-    const maxBoxId = maxBy(boxes, 'id');
-    // const maxListId = maxBy(lists, 'id');
-    const boxId = !maxBoxId ? 0 : maxBoxId.id + 1;
-    // const listId = !maxListId ? 0 : maxListId.id + 1;
-    // const newLists = [
-    //   ...lists,
-    //   {
-    //     id: listId,
-    //     boxId,
-    //     listItems: [],
-    //   },
-    // ];
-    const newBoxes = [
-      ...boxes,
-      {
-        type: 'list',
-        id: boxId,
-        title: `box #${boxId}`,
-        cards: [],
-        // list should only know about the cards position and not content; maybe make a state for list?
-        // cards: [{
-        //   id: 0
-        // }],
-        ...LIST_DEFAULT_POSITION,
-      },
-    ];
-    updateBoxes(newBoxes);
-    return;
-  };
-
-  const addBox = () => {
+  const addItem = (obj) => () => {
     const maxBoxId = maxBy(boxes, 'id');
     const boxId = !maxBoxId ? 0 : maxBoxId.id + 1;
     const newBoxes = [
       ...boxes,
       {
-        type: 'card',
+        ...obj,
         id: boxId,
         title: `box #${boxId}`,
-        isListItem: false,
-        ...DEFAULT_POSITION,
-      },
+      }
     ];
     updateBoxes(newBoxes);
   };
@@ -178,18 +142,27 @@ const App = () => {
   return (
     <StyledApp>
       <button
-        id="addBox"
+        id="addCard"
         className="globalAddButton"
         disabled={fullDisable}
-        onClick={addBox}
+        onClick={addItem({
+          type: 'card',
+          isListItem: false,
+          ...DEFAULT_POSITION,
+        })}
       >
-        Add Box Item
+        Add Card
       </button>
       <button
         id="addList"
         className="globalAddButton"
         disabled={fullDisable}
-        onClick={addList}
+        onClick={addItem({
+          type: 'list',
+          isListItem: false,
+          cards: [],
+          ...LIST_DEFAULT_POSITION,
+        })}
       >
         Add List
       </button>

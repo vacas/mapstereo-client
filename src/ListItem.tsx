@@ -24,12 +24,7 @@ export interface CardProps {
   isListItem?: boolean;
   updateBoxes?: Dispatch<SetStateAction<Array<any>>>;
   setDisableAll?: Dispatch<SetStateAction<boolean>>;
-  fullDisable?: boolean;
-  playList: boolean;
-  socket?: SocketIOClient.Socket;
-  onStop: Dispatch<SetStateAction<string>>;
-  deleteBox?: Function;
-  type: string;
+  children?: React.ReactElement;
 }
 
 interface DragItem {
@@ -40,22 +35,14 @@ interface DragItem {
 }
 
 const StyledCard = styled.div`
-  border: 1px dashed gray;
-  padding: 0.5rem 1rem;
+  position: relative;
   margin-bottom: 0.5rem;
-  background-color: white;
   cursor: move;
   z-index: 4;
   opacity: 1;
 
   &.isDragging {
     opacity: 0.5;
-  }
-
-  & > button {
-    position: absolute;
-    top: 0;
-    right: 0;
   }
 `;
 
@@ -70,13 +57,7 @@ const Card: React.FC<CardProps> = ({
   isListItem,
   updateBoxes,
   blobUrl,
-  fullDisable,
-  playList,
-  setDisableAll,
-  socket,
-  onStop,
-  deleteBox,
-  type,
+  children
 }: CardProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const [, drop] = useDrop({
@@ -260,27 +241,11 @@ const Card: React.FC<CardProps> = ({
   return (
     <StyledCard
       ref={ref}
-      className={cn({
+      className={cn('listItem', {
         isDragging,
       })}
     >
-      <span className="title">{title}</span>
-      <Recorder
-        playList={playList}
-        cardId={id}
-        // listId={listId}
-        onStop={(url) => {
-          saveUrlToList(url);
-        }}
-        blobUrl={blobUrl}
-        setDisableAll={setDisableAll}
-        fullDisable={fullDisable}
-        socket={socket}
-        title={title}
-      />
-      <button disabled={fullDisable} onClick={deleteCard}>
-        delete
-      </button>
+      {children}
     </StyledCard>
   );
 };

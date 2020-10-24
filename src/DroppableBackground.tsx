@@ -58,7 +58,6 @@ const DroppableBackground = ({
 
         if (delta && item.ref && item.ref.current) {
           const boundingRect = item.ref.current
-            .getElementsByClassName('title')[0]
             .getBoundingClientRect();
           const xPadding = 32;
           const yPadding = 31;
