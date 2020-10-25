@@ -18,6 +18,43 @@ interface Props {
   currentBox: BoxType;
 }
 
+const getListItemsInOrder = (boxes, cards) => {
+  const listItems =
+    (boxes &&
+      boxes.length > 0 &&
+      boxes.filter((boxItem) => {
+        const listItem =
+          cards &&
+          cards.length > 0 &&
+          cards.find((cardId) => boxItem.id === cardId);
+
+        if (listItem || listItem === 0) {
+          return true;
+        }
+
+        return false;
+      })) ||
+    [];
+
+  let listItemsSorted = [];
+
+  // sorting listItems to how list has them sorted
+  if (listItems && listItems.length > 0) {
+    for (let i = 0; i < cards.length; i++) {
+      const cardId = cards[i];
+      const cardObj = listItems.find((listItem) => listItem.id === cardId);
+
+      if (cardObj) {
+        listItemsSorted = update(listItemsSorted, {
+          $push: [{ ...cardObj }],
+        });
+      }
+    }
+  }
+
+  return listItemsSorted;
+};
+
 const InternalBox = ({
   boxes,
   setDisableAll,
@@ -32,7 +69,7 @@ const InternalBox = ({
   const deleteBox = (currentId) => {
     const confirmed = confirm(`Are you sure you want to delete "${title}"?`);
     if (confirmed) {
-      const selectedBox = boxes.find(box => box.id === currentId);
+      const selectedBox = boxes.find((box) => box.id === currentId);
       let newBoxes = boxes;
 
       if (selectedBox) {
@@ -43,13 +80,13 @@ const InternalBox = ({
             const listItemId = listItems[i];
 
             newBoxes = update(newBoxes, {
-              $set: newBoxes.filter(box => box.id !== listItemId)
+              $set: newBoxes.filter((box) => box.id !== listItemId),
             });
           }
         }
 
         newBoxes = newBoxes = update(newBoxes, {
-          $set: newBoxes.filter(box => box.id !== currentId)
+          $set: newBoxes.filter((box) => box.id !== currentId),
         });
         updateBoxes(newBoxes);
       }
@@ -57,11 +94,11 @@ const InternalBox = ({
   };
 
   const onStop = (url, cardId) => {
-    const cardIndex = boxes.findIndex(box => box.id === cardId);    
+    const cardIndex = boxes.findIndex((box) => box.id === cardId);
     const updatedBoxes = update(boxes, {
       [cardIndex]: {
-        blobUrl: { $set: url }
-      }
+        blobUrl: { $set: url },
+      },
     });
 
     updateBoxes(updatedBoxes);
@@ -69,38 +106,7 @@ const InternalBox = ({
 
   if (type === 'list') {
     // getting list items inside list
-    const listItems: Array<any> =
-      (boxes &&
-        boxes.length > 0 &&
-        boxes.filter((boxItem) => {
-          const listItem =
-            cards &&
-            cards.length > 0 &&
-            cards.find((cardId) => boxItem.id === cardId);
-
-          if (listItem || listItem === 0) {
-            return true;
-          }
-
-          return false;
-        })) ||
-      [];
-
-    let listItemsSorted = [];
-
-    // sorting listItems to how list has them sorted
-    if (listItems && listItems.length > 0) {
-      for (let i = 0; i < cards.length; i++) {
-        const cardId = cards[i];
-        const cardObj = listItems.find((listItem) => listItem.id === cardId);
-
-        if (cardObj) {
-          listItemsSorted = update(listItemsSorted, {
-            $push: [{ ...cardObj }],
-          });
-        }
-      }
-    }
+    const listItems: Array<any> = getListItemsInOrder(boxes, cards);
 
     return (
       <DraggableContainer {...currentBox}>
@@ -117,7 +123,7 @@ const InternalBox = ({
             fullDisable={fullDisable}
             updateBoxes={updateBoxes}
             boxes={boxes}
-            listItems={listItemsSorted}
+            listItems={listItems}
             setPlayList={setPlayList}
             playingList={playingList}
             deleteBox={deleteBox}
@@ -133,7 +139,6 @@ const InternalBox = ({
     return null;
   }
 
-  // this dynamic should be consolidated within card component
   return (
     <DraggableContainer {...currentBox}>
       <Box

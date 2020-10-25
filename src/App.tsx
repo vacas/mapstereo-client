@@ -62,14 +62,8 @@ const StyledApp = styled.div`
 
 /*
   TODO LIST:
-  - Refactor architecture of types 'cards' and 'lists'; these will be different types, and boxes or dragged content will be the encapsulating name for these types, for now
-  - Make custom state for setBoxes and setLists to clean up socket.emit (https://dev.to/filippofilip95/i-replaced-usestate-hook-with-custom-one-3dn1)
-  - Enhance move card experience
   - emit message on socket to block box or card if it is being recorded on another side (currently blocks all buttons)
   - display cursor (https://stackoverflow.com/questions/34162200/displaying-cursor-on-every-connected-client-in-socket-io)
-
-
-  Need to add drag and drop within lists and clean up
 */
 
 const App = () => {
@@ -134,10 +128,6 @@ const App = () => {
       boxes: updatedBoxes,
     });
   };
-
-  /*
-    Add box, add list and add card should all come from the same function, passing in the new id and specifying the type in the parameters; if a card should be a part of a list, it should just be added to the cards array in the list type object. This also applies to deleting these same types. Think of the composite pattern and follow suit.
-  */
 
   return (
     <StyledApp>
