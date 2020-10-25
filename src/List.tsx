@@ -1,4 +1,4 @@
-import React, { useState, Dispatch, SetStateAction, useCallback } from 'react';
+import React, { Dispatch, SetStateAction } from 'react';
 import { useDrop } from 'react-dnd';
 import styled from 'styled-components';
 import ListItem from './ListItem';
@@ -80,17 +80,9 @@ const List = ({
   const [, drop] = useDrop({
     accept: [ItemTypes.CARD],
     drop: (item: any) => {
-      console.log('drop item on list', item);
 
-      if (item.type === 'card') {
+      if (item.type === 'card' && !item.isListItem) {
         const listIndex = boxes.findIndex((box) => box.id === id);
-
-        console.log('listIndex', listIndex);
-
-        console.log('item.id', item.id);
-        console.log('boxes[listIndex]', boxes[listIndex]);
-
-        console.log('before adding cards - boxes', boxes);
 
         if (!boxes[listIndex].cards.includes(item.id)) {
           const cardIndex = boxes.findIndex((box) => box.id === item.id);
@@ -102,8 +94,6 @@ const List = ({
               },
             },
           });
-
-          console.log('after adding cards - newBoxes', newBoxes);
 
           newBoxes = update(newBoxes, {
             [cardIndex]: {
@@ -129,33 +119,27 @@ const List = ({
   // adds new list item
   // NEED TO ADD BOX AND APPEND ID TO CARDS ARRAY IN LIST
   const addItem = () => {
+    const listIndex = boxes.findIndex((box) => box.id === id);
     const highestID = maxBy(boxes, 'id');
-
     const newId = highestID.id + 1;
-
-    console.log('newId', newId);
-
-    console.log('boxes inside addItem', boxes);
 
     let newBoxes = update(boxes, {
       $push: [
         {
+          id: newId,
           type: 'card',
+          isListItem: true,
           top,
           left,
-          id: newId,
           title: `box #${newId}`,
-          isListItem: true,
           blobUrl: undefined,
         },
       ],
     });
 
     newBoxes = update(newBoxes, {
-      [id]: { cards: { $push: [newId] } },
+      [listIndex]: { cards: { $push: [newId] } },
     });
-
-    console.log('newBoxes inside addItem', newBoxes);
 
     updateBoxes(newBoxes);
   };
@@ -179,7 +163,7 @@ const List = ({
         },
       },
     });
-
+    
     updateBoxes(newBoxes);
   };
 
@@ -255,16 +239,15 @@ const List = ({
         ) : (
           listItems.map((listItem, i) => (
             <ListItem
+              key={`listKey:${Math.pow(new Date().getDate(), i)}`}
               boxes={boxes}
               left={left}
               top={top}
-              key={listItem.id}
-              index={i}
+              listItemIndex={i}
               id={listItem.id}
               title={listItem.title}
               blobUrl={listItem.blobUrl}
               moveCard={moveCard}
-              setDisableAll={setDisableAll}
               updateBoxes={updateBoxes}
               isListItem={listItem.isListItem}
             >
@@ -274,6 +257,8 @@ const List = ({
                 title={listItem.title}
                 deleteBox={deleteBox}
                 fullDisable={fullDisable}
+                boxes={boxes}
+                updateBoxes={updateBoxes}
               >
                 <Recorder
                   playList={playingList}

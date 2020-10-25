@@ -4,14 +4,11 @@ import { useDrag, useDrop, DropTargetMonitor } from 'react-dnd';
 import { XYCoord } from 'dnd-core';
 import styled from 'styled-components';
 import { ItemTypes } from './ItemTypes';
-import Recorder from './Recorder';
-import update from 'immutability-helper';
-import DraggableContainer from './DraggableContainer';
 
 export interface CardProps {
   id: any;
   title: string;
-  index: number;
+  listItemIndex: number;
   left?: number;
   top?: number;
   blobUrl?: string;
@@ -23,7 +20,6 @@ export interface CardProps {
   boxes: Array<any>;
   isListItem?: boolean;
   updateBoxes?: Dispatch<SetStateAction<Array<any>>>;
-  setDisableAll?: Dispatch<SetStateAction<boolean>>;
   children?: React.ReactElement;
 }
 
@@ -32,6 +28,7 @@ interface DragItem {
   id: string;
   type: string;
   isListItem: boolean;
+  listItemIndex: number;
 }
 
 const StyledCard = styled.div`
@@ -49,7 +46,7 @@ const StyledCard = styled.div`
 const Card: React.FC<CardProps> = ({
   id,
   title,
-  index,
+  listItemIndex,
   moveCard,
   left,
   top,
@@ -66,11 +63,12 @@ const Card: React.FC<CardProps> = ({
       if (!ref.current || !item || !item.isListItem) {
         return;
       }
-      const dragIndex = item.index;
-      const hoverIndex = index;
+      
+      const dragIndex = item.listItemIndex;
+      const hoverIndex = listItemIndex;
 
       // Don't replace items with themselves
-      if (dragIndex === hoverIndex) {
+      if (dragIndex === hoverIndex || id === item.id) {
         return;
       }
 
@@ -108,7 +106,7 @@ const Card: React.FC<CardProps> = ({
       // Generally it's better to avoid mutations,
       // but it's good here for the sake of performance
       // to avoid expensive index searches.
-      item.index = hoverIndex;
+      item.listItemIndex = hoverIndex;
     },
   });
 
@@ -116,8 +114,7 @@ const Card: React.FC<CardProps> = ({
     item: {
       type: ItemTypes.CARD,
       id,
-      index,
-      // listId,
+      listItemIndex,
       isListItem,
       title,
       top,
@@ -127,114 +124,8 @@ const Card: React.FC<CardProps> = ({
     },
     collect: (monitor: any) => ({
       isDragging: monitor.isDragging(),
-    }),
-    end: (dropResult, monitor) => {
-      const { type } = monitor.getDropResult() || {};
-
-      const didDrop = monitor.didDrop();
-
-      // when dropped outside of list, this is removes from list
-      if (didDrop && type === 'droppable_background') {
-        // this should remove this card from the listItems of list
-        const listIndex = boxes.findIndex(box => {
-          if (box.type === 'list' && box.cards.includes(id)) {
-            return true;
-          }
-
-          return false;
-        });
-        const cardIndex = boxes.findIndex(box => box.id === id);
-
-        let newBoxes = update(boxes, {
-          [listIndex]: {
-            cards: { $set: boxes[listIndex].cards.filter(cardId => cardId !== id)
-          }}
-        });
-
-        newBoxes = update(newBoxes, {
-          [cardIndex]: {
-            isListItem: {$apply: () => false}
-          }
-        });
-        
-        // const newBoxes = lists.map((list) => {
-        //   if (list.id === listId) {
-        //     const newList = list.listItems.filter(
-        //       (listItem) => listItem.id !== id
-        //     );
-
-        //     return {
-        //       ...list,
-        //       listItems: newList,
-        //     };
-        //   }
-
-        //   return list;
-        // });
-
-        updateBoxes(newBoxes);
-        // socket.emit('sendingChanges', {
-        //   lists: newBoxes,
-        // });
-      }
-    },
+    })
   });
-
-  // this should save to card data, not list
-  const saveUrlToList = (url) => {
-    // const updatedLists = lists.map((list) => {
-    //   if (list.id === listId) {
-    //     const newList = list.listItems.map((listItem) => {
-    //       if (listItem.id === id) {
-    //         return {
-    //           ...listItem,
-    //           blobUrl: url,
-    //         };
-    //       }
-
-    //       return listItem;
-    //     });
-
-    //     return {
-    //       ...list,
-    //       listItems: newList,
-    //     };
-    //   }
-
-    //   return list;
-    // });
-
-    // setLists(updatedLists);
-    // socket.emit('sendingChanges', {
-    //   lists: updatedLists,
-    // });
-  };
-
-  // this should remove card from list and card itself from "boxes"
-  const deleteCard = () => {
-    // const confirmed = confirm(`Are you sure you want to delete "${title}"?`);
-    // if (confirmed) {
-    //   const newBoxes = lists.map((list) => {
-    //     if (list.id === listId) {
-    //       const newList = list.listItems.filter(
-    //         (listItem) => listItem.id !== id
-    //       );
-
-    //       return {
-    //         ...list,
-    //         listItems: newList,
-    //       };
-    //     }
-
-    //     return list;
-    //   });
-
-    //   setLists(newBoxes);
-    //   socket.emit('sendingChanges', {
-    //     lists: newBoxes,
-    //   });
-    // }
-  };
 
   drag(drop(ref));
 

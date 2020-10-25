@@ -94,12 +94,12 @@ const DroppableBackground = ({
             [cardIndex]: {
               $set: {
                 id: item.id,
-                left,
-                top,
-                blobUrl: item.blobUrl,
                 type: item.type,
-                title: item.title,
                 isListItem: false,
+                top,
+                left,
+                title: item.title,
+                blobUrl: item.blobUrl,
               }
             }
           });

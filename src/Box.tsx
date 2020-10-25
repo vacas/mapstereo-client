@@ -1,15 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Check, Edit } from 'react-feather';
 import styled from 'styled-components';
 import cn from 'classnames';
+import update from 'immutability-helper';
+import BoxType from './types/box';
 
 interface Props {
+  boxes: Array<BoxType>;
   id: number;
   children?: React.ReactElement;
   type?: string;
   title?: string;
   fullDisable?: boolean;
   deleteBox?: Function;
+  updateBoxes: (boxes: Array<BoxType>) => void;
 }
 
 const StyledBox = styled.div`
@@ -33,9 +37,33 @@ const StyledBox = styled.div`
   }
 `;
 
-const Box = ({ children, title, fullDisable, deleteBox, id, type }: Props) => {
+const Box = ({
+  children,
+  title,
+  fullDisable,
+  deleteBox,
+  id,
+  type,
+  boxes,
+  updateBoxes,
+}: Props) => {
   const [edit, setEdit] = useState(false);
   const [editedTitle, setEditedTitle] = useState(title);
+
+  useEffect(() => {
+    if (!edit && editedTitle !== title) {
+      const cardIndex = boxes.findIndex((box) => box.id === id);
+      const newBoxes = update(boxes, {
+        [cardIndex]: {
+          $set: {
+            ...boxes[cardIndex],
+            title: editedTitle,
+          },
+        },
+      });
+      updateBoxes(newBoxes);
+    }
+  }, [edit]);
 
   return (
     <StyledBox
@@ -46,7 +74,13 @@ const Box = ({ children, title, fullDisable, deleteBox, id, type }: Props) => {
       {!edit ? (
         <React.Fragment>
           {title}{' '}
-          <span className="icons" onClick={() => setEdit(true)}>
+          <span
+            className="icons"
+            onClick={() => {
+              setEditedTitle(title);
+              setEdit(true);
+            }}
+          >
             <Edit size={12} />
           </span>
         </React.Fragment>

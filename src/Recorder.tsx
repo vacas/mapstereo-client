@@ -140,7 +140,7 @@ const Recorder = ({
   }, [status]);
 
   useEffect(() => {
-    if (mediaBlobUrl !== blobUrl) {
+    if (blobUrl && mediaBlobUrl !== blobUrl) {
       setMediaBlobUrl(blobUrl);
     }
   }, [blobUrl])

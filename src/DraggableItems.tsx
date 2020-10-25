@@ -26,13 +26,32 @@ const InternalBox = ({
   socket,
 }: Props) => {
   const [playingList, setPlayList] = useState(false);
-  const { left, top, title, id, blobUrl, type, cards, isListItem } = box;
+  const { title, id, blobUrl, type, cards, isListItem } = box;
 
   const deleteBox = (currentId) => {
     const confirmed = confirm(`Are you sure you want to delete "${title}"?`);
     if (confirmed) {
-      const updatedBoxes = boxes.filter((box) => box.id !== currentId);
-      updateBoxes(updatedBoxes);
+      const selectedBox = boxes.find(box => box.id === currentId);
+      let newBoxes = boxes;
+
+      if (selectedBox) {
+        if (selectedBox.type === 'list' && selectedBox.cards.length > 0) {
+          const listItems = selectedBox.cards;
+
+          for (let i = 0; i < listItems.length; i++) {
+            const listItemId = listItems[i];
+
+            newBoxes = update(newBoxes, {
+              $set: newBoxes.filter(box => box.id !== listItemId)
+            });
+          }
+        }
+
+        newBoxes = newBoxes = update(newBoxes, {
+          $set: newBoxes.filter(box => box.id !== currentId)
+        });
+        updateBoxes(newBoxes);
+      }
     }
   };
 
@@ -76,7 +95,6 @@ const InternalBox = ({
       for (let i = 0; i < cards.length; i++) {
         const cardId = cards[i];
         const cardObj = listItems.find((listItem) => listItem.id === cardId);
-        console.log('cardObj', cardObj);
 
         if (cardObj) {
           listItemsSorted = update(listItemsSorted, {
@@ -94,6 +112,8 @@ const InternalBox = ({
           title={title}
           deleteBox={deleteBox}
           fullDisable={fullDisable}
+          boxes={boxes}
+          updateBoxes={updateBoxes}
         >
           <List
             {...box}
@@ -126,6 +146,8 @@ const InternalBox = ({
         title={title}
         deleteBox={deleteBox}
         fullDisable={fullDisable}
+        boxes={boxes}
+        updateBoxes={updateBoxes}
       >
         <Recorder
           fullDisable={fullDisable}

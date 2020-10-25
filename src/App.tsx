@@ -120,8 +120,8 @@ const App = () => {
     const newBoxes = [
       ...boxes,
       {
-        ...obj,
         id: boxId,
+        ...obj,
         title: `box #${boxId}`,
       }
     ];
@@ -181,7 +181,6 @@ const App = () => {
           fullDisable={fullDisable}
           updateBoxes={updateBoxes}
           box={box}
-          setBoxes={setBoxes}
           boxes={boxes}
           socket={socket}
         />
