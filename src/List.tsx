@@ -108,7 +108,6 @@ const List = ({
   });
 
   // adds new list item
-  // NEED TO ADD BOX AND APPEND ID TO CARDS ARRAY IN LIST
   const addItem = () => {
     const listIndex = boxes.findIndex((box) => box.id === id);
     const highestID = maxBy(boxes, 'id');
