@@ -42,7 +42,7 @@ enum RecorderErrors {
 }
 
 interface Props {
-  onStop: Dispatch<SetStateAction<string>>;
+  onStop: (url: string, cardId: number) => void;
   blobUrl: string;
   listId?: number;
   cardId?: number;
@@ -97,7 +97,9 @@ const Recorder = ({
 
   // set up basic variables for app
   const getMediaStream = useCallback(async () => {
-    setStatus('acquiring_media');
+    if (status !== 'acquiring_media') {
+      setStatus('acquiring_media');
+    }
     const requiredMedia: MediaStreamConstraints = {
       audio: true,
     };
@@ -106,10 +108,16 @@ const Recorder = ({
         requiredMedia
       );
       mediaStream.current = stream;
-      setStatus('idle');
-    } catch (error) {
-      setError(error.name);
-      setStatus('idle');
+      if (status !== 'idle') {
+        setStatus('idle');
+      }
+    } catch (e) {
+      if (error !== e.name) {
+        setError(e.name);
+      }
+      if (status !== 'idle') {
+        setStatus('idle');
+      }
     }
   }, []);
 
@@ -191,7 +199,7 @@ const Recorder = ({
     
     setStatus('stopped');
     setMediaBlobUrl(url);
-    onStop(url);
+    onStop(url, cardId);
   };
 
   const stopRecording = () => {

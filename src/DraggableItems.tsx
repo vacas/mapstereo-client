@@ -5,6 +5,7 @@ import Recorder from './Recorder';
 import Box from './Box';
 import BoxType from './types/box';
 import DraggableContainer from './DraggableContainer';
+import { LOADIPHLPAPI } from 'dns';
 
 interface Props {
   boxes: Array<BoxType>;
@@ -14,19 +15,19 @@ interface Props {
   updateBoxes?: (boxes: Array<BoxType>) => void;
 
   // current box
-  box: BoxType;
+  currentBox: BoxType;
 }
 
 const InternalBox = ({
   boxes,
   setDisableAll,
   fullDisable,
-  box,
+  currentBox,
   updateBoxes,
   socket,
 }: Props) => {
   const [playingList, setPlayList] = useState(false);
-  const { title, id, blobUrl, type, cards, isListItem } = box;
+  const { title, id, blobUrl, type, cards, isListItem } = currentBox;
 
   const deleteBox = (currentId) => {
     const confirmed = confirm(`Are you sure you want to delete "${title}"?`);
@@ -55,22 +56,19 @@ const InternalBox = ({
     }
   };
 
-  const onStop = (url) => {
-    const updatedBoxes = boxes.map((box) => {
-      if (box.id === id) {
-        return {
-          ...box,
-          blobUrl: url,
-        };
+  const onStop = (url, cardId) => {
+    const cardIndex = boxes.findIndex(box => box.id === cardId);    
+    const updatedBoxes = update(boxes, {
+      [cardIndex]: {
+        blobUrl: { $set: url }
       }
-
-      return box;
     });
 
     updateBoxes(updatedBoxes);
   };
 
   if (type === 'list') {
+    // getting list items inside list
     const listItems: Array<any> =
       (boxes &&
         boxes.length > 0 &&
@@ -90,7 +88,7 @@ const InternalBox = ({
 
     let listItemsSorted = [];
 
-    // sorting listItems
+    // sorting listItems to how list has them sorted
     if (listItems && listItems.length > 0) {
       for (let i = 0; i < cards.length; i++) {
         const cardId = cards[i];
@@ -105,18 +103,16 @@ const InternalBox = ({
     }
 
     return (
-      <DraggableContainer {...box}>
+      <DraggableContainer {...currentBox}>
         <Box
-          id={id}
-          type={type}
-          title={title}
+          box={currentBox}
           deleteBox={deleteBox}
           fullDisable={fullDisable}
           boxes={boxes}
           updateBoxes={updateBoxes}
         >
           <List
-            {...box}
+            {...currentBox}
             setDisableAll={setDisableAll}
             fullDisable={fullDisable}
             updateBoxes={updateBoxes}
@@ -139,11 +135,9 @@ const InternalBox = ({
 
   // this dynamic should be consolidated within card component
   return (
-    <DraggableContainer {...box}>
+    <DraggableContainer {...currentBox}>
       <Box
-        id={id}
-        type={type}
-        title={title}
+        box={currentBox}
         deleteBox={deleteBox}
         fullDisable={fullDisable}
         boxes={boxes}

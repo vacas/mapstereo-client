@@ -7,10 +7,8 @@ import BoxType from './types/box';
 
 interface Props {
   boxes: Array<BoxType>;
-  id: number;
+  box: BoxType;
   children?: React.ReactElement;
-  type?: string;
-  title?: string;
   fullDisable?: boolean;
   deleteBox?: Function;
   updateBoxes: (boxes: Array<BoxType>) => void;
@@ -38,15 +36,14 @@ const StyledBox = styled.div`
 `;
 
 const Box = ({
+  box,
   children,
-  title,
   fullDisable,
   deleteBox,
-  id,
-  type,
   boxes,
   updateBoxes,
 }: Props) => {
+  const { id, title, type } = box;
   const [edit, setEdit] = useState(false);
   const [editedTitle, setEditedTitle] = useState(title);
 

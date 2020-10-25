@@ -10,15 +10,6 @@ import update from 'immutability-helper';
 import Recorder from './Recorder';
 import Box from './Box';
 
-export interface ListItem {
-  id?: number;
-  title?: string;
-  listId?: number;
-  blobUrl?: string;
-  isListItem?: boolean;
-  type?: string;
-}
-
 export interface Props {
   drop?: any;
   deleteBox?: Function;
@@ -28,11 +19,11 @@ export interface Props {
   fullDisable?: boolean;
   playingList?: boolean;
   setPlayList?: Dispatch<SetStateAction<boolean>>;
-  listItems?: Array<ListItem>;
+  listItems?: Array<BoxType>;
   left?: number;
   top?: number;
   id?: number;
-  onStop: Dispatch<SetStateAction<string>>;
+  onStop: (url: string, cardId: number) => void;
   socket?: SocketIOClient.Socket;
 }
 
@@ -52,10 +43,10 @@ const StyledList = styled.div`
   }
 `;
 
-const getCurrentIndex = (currentId, listItems) => {
+const getCurrentIndex = (currentId, listItems, listId) => {
   const currentIndex = listItems.findIndex(
     (item) =>
-      item && getRecorderId(item.listId, item.id, item.blobUrl) === currentId
+      item && getRecorderId(listId, item.id, item.blobUrl) === currentId
   );
 
   return currentIndex;
@@ -171,7 +162,7 @@ const List = ({
   const playNextClip = (e) => {
     const currentId = e.currentTarget.id;
     // finds the current index in listItems
-    const currentIndex = getCurrentIndex(currentId, listItems);
+    const currentIndex = getCurrentIndex(currentId, listItems, id);
     const nextIndex = currentIndex + 1;
     const nextAudio = listItems[nextIndex] as any;
 
@@ -199,10 +190,11 @@ const List = ({
 
   // plays items in list
   const playList = (n: number) => {
+    const listId = id;
     const listItem = listItems[n];
 
     if (listItem) {
-      const { id, listId, blobUrl } = listItem;
+      const { id, blobUrl } = listItem;
       const audioTag = document.getElementById(
         getRecorderId(listId, id, blobUrl)
       ) as HTMLAudioElement;
@@ -252,9 +244,7 @@ const List = ({
               isListItem={listItem.isListItem}
             >
               <Box
-                id={listItem.id}
-                type={listItem.type}
-                title={listItem.title}
+                box={listItem}
                 deleteBox={deleteBox}
                 fullDisable={fullDisable}
                 boxes={boxes}
@@ -262,7 +252,8 @@ const List = ({
               >
                 <Recorder
                   playList={playingList}
-                  cardId={id}
+                  listId={id}
+                  cardId={listItem.id}
                   onStop={onStop}
                   blobUrl={listItem.blobUrl}
                   setDisableAll={setDisableAll}
@@ -278,12 +269,5 @@ const List = ({
     </StyledList>
   );
 };
-
-// fullDisable?: boolean;
-//   playList: boolean;
-//   socket?: SocketIOClient.Socket;
-//   onStop: Dispatch<SetStateAction<string>>;
-//   deleteBox?: Function;
-//   type: string;
 
 export default List;

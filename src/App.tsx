@@ -180,7 +180,7 @@ const App = () => {
           setDisableAll={setDisableAll}
           fullDisable={fullDisable}
           updateBoxes={updateBoxes}
-          box={box}
+          currentBox={box}
           boxes={boxes}
           socket={socket}
         />
