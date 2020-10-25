@@ -8,7 +8,6 @@ const multer  = require('multer');
 const upload = multer();
 const app = express();
 const PORT = process.env.PORT || 3000;
-const devMode = process.env.NODE_ENV !== 'production';
 const INDEX_PATH = '../dist';
 let currentState = {};
 
@@ -18,7 +17,6 @@ app.use(bodyParser.urlencoded());
 app.use(bodyParser.json());
 
 app.use(express.static(path.join(__dirname, INDEX_PATH)));
-app.use(express.static(path.join(__dirname, '../public')));
 
 // need to add authorization bearer
 app.post('/upload', upload.single('soundBlob'), async (req, res) => {
