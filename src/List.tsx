@@ -1,35 +1,29 @@
-import React, { useState, Dispatch, SetStateAction } from 'react';
+import React, { Dispatch, SetStateAction } from 'react';
 import { useDrop } from 'react-dnd';
 import styled from 'styled-components';
-import Card from './Card';
+import ListItem from './ListItem';
 import { ItemTypes } from './ItemTypes';
 import maxBy from 'lodash/maxBy';
 import { getRecorderId } from './helper';
-
-export interface ListItem {
-  id?: number;
-  title?: string;
-  listId?: number;
-  blobUrl?: string;
-}
+import BoxType from './types/box';
+import update from 'immutability-helper';
+import Recorder from './Recorder';
+import Box from './Box';
 
 export interface Props {
   drop?: any;
-  setLists?: Dispatch<SetStateAction<Array<any>>>;
-  lists?: Array<any>;
-  listId?: number;
-  setBoxes?: Dispatch<SetStateAction<Array<any>>>;
-  boxes?: Array<any>;
-  left?: number;
-  top?: number;
-  moveCard?: (
-    dragIndex: number,
-    hoverIndex: number,
-    listId: number,
-    lists: Array<any>
-  ) => void;
+  deleteBox?: Function;
+  updateBoxes?: (boxes: Array<BoxType>) => void;
+  boxes?: Array<BoxType>;
   setDisableAll?: Dispatch<SetStateAction<boolean>>;
   fullDisable?: boolean;
+  playingList?: boolean;
+  setPlayList?: Dispatch<SetStateAction<boolean>>;
+  listItems?: Array<BoxType>;
+  left?: number;
+  top?: number;
+  id?: number;
+  onStop: (url: string, cardId: number) => void;
   socket?: SocketIOClient.Socket;
 }
 
@@ -49,69 +43,60 @@ const StyledList = styled.div`
   }
 `;
 
-const getCurrentIndex = (currentId, listItems) => {
+const getCurrentIndex = (currentId, listItems, listId) => {
   const currentIndex = listItems.findIndex(
     (item) =>
-      item && getRecorderId(item.listId, item.id, item.blobUrl) === currentId
+      item && getRecorderId(listId, item.id, item.blobUrl) === currentId
   );
 
   return currentIndex;
 };
 
 const List = ({
-  lists,
-  listId,
-  setLists,
+  updateBoxes,
   boxes,
-  setBoxes,
-  left,
-  top,
-  moveCard,
   fullDisable,
   setDisableAll,
+  playingList,
+  setPlayList,
+  listItems,
+  left,
+  top,
+  id,
+  onStop,
+  deleteBox,
   socket,
 }: Props) => {
-  const [playingList, setPlayList] = useState(false);
-  const listData: { listItems: Array<ListItem> } =
-    lists && lists.length > 0 && lists.find((list) => list.id === listId);
-  const { listItems } = listData || { listItem: [{ id: 0 }] };
-
-  // if a box is dropped inside a list, box becomes into a list item and gets removed from background container
+  // if a box is dropped inside a list, box becomes into a list item and gets removed from droppable_background
   const [, drop] = useDrop({
-    accept: [ItemTypes.BOX, ItemTypes.CARD],
+    accept: [ItemTypes.CARD],
     drop: (item: any) => {
-      if (item.type === 'box' && !item.Component) {
-        const highestID = maxBy(listItems, 'id');
 
-        const newId = !highestID ? 0 : highestID.id + 1;
+      if (item.type === 'card' && !item.isListItem) {
+        const listIndex = boxes.findIndex((box) => box.id === id);
 
-        const newLists = lists.map((list) => {
-          if (list.id === listId) {
-            return {
-              ...list,
-              listItems: [
-                ...list.listItems,
-                {
-                  id: newId,
-                  title: item.title,
-                  listId,
-                  blobUrl: item.blobUrl,
-                },
-              ],
-            };
-          }
+        if (!boxes[listIndex].cards.includes(item.id)) {
+          const cardIndex = boxes.findIndex((box) => box.id === item.id);
+          let newBoxes;
+          newBoxes = update(boxes, {
+            [listIndex]: {
+              cards: {
+                $push: [item.id],
+              },
+            },
+          });
 
-          return list;
-        });
-        const newBoxes = [...boxes.filter((box) => box.id !== item.id)];
+          newBoxes = update(newBoxes, {
+            [cardIndex]: {
+              $apply: (box) => ({
+                ...box,
+                isListItem: true,
+              }),
+            },
+          });
 
-        setLists(newLists);
-        setBoxes(newBoxes);
-
-        socket.emit('sendingChanges', {
-          boxes: newBoxes,
-          lists: newLists,
-        });
+          updateBoxes(newBoxes);
+        }
 
         setDisableAll(false);
 
@@ -124,41 +109,59 @@ const List = ({
 
   // adds new list item
   const addItem = () => {
-    const highestID = maxBy(listItems, 'id');
+    const listIndex = boxes.findIndex((box) => box.id === id);
+    const highestID = maxBy(boxes, 'id');
+    const newId = highestID.id + 1;
 
-    const newId = !highestID ? 0 : highestID.id + 1;
-
-    const newLists = lists.map((list) => {
-      if (list.id === listId) {
-        const newList = [
-          ...list.listItems,
-          {
-            id: newId,
-            title: `Card Item #${newId}`,
-            listId,
-          },
-        ];
-
-        return {
-          ...list,
-          listItems: newList,
-        };
-      }
-
-      return list;
+    let newBoxes = update(boxes, {
+      $push: [
+        {
+          id: newId,
+          type: 'card',
+          isListItem: true,
+          top,
+          left,
+          title: `box #${newId}`,
+          blobUrl: undefined,
+        },
+      ],
     });
 
-    setLists(newLists);
-    socket.emit('sendingChanges', {
-      lists: newLists,
+    newBoxes = update(newBoxes, {
+      [listIndex]: { cards: { $push: [newId] } },
     });
+
+    updateBoxes(newBoxes);
   };
 
-  // handles playing next clip if available
+  const moveCard = (dragIndex: number, hoverIndex: number, cardId: number) => {
+    const listIndex = boxes.findIndex((box) => {
+      if (box.type === 'list' && box.cards.includes(cardId)) {
+        return true;
+      }
+
+      return false;
+    });
+
+    const newBoxes = update(boxes, {
+      [listIndex]: {
+        cards: {
+          $splice: [
+            [dragIndex, 1],
+            [hoverIndex, 0, cardId],
+          ],
+        },
+      },
+    });
+    
+    updateBoxes(newBoxes);
+  };
+
+  // event listener: handles playing next clip if available
   const playNextClip = (e) => {
     const currentId = e.currentTarget.id;
     // finds the current index in listItems
-    const currentIndex = getCurrentIndex(currentId, listItems);
+    const currentIndex = getCurrentIndex(currentId, listItems, id);
     const nextIndex = currentIndex + 1;
     const nextAudio = listItems[nextIndex] as any;
 
@@ -170,7 +173,7 @@ const List = ({
     return setPlayList(false);
   };
 
-  // if any item in list is paused, pause the whole list
+  // event listener: if any item in list is paused, pause the whole list
   const pauseList = (e) => {
     if (
       e.currentTarget.paused &&
@@ -186,10 +189,11 @@ const List = ({
 
   // plays items in list
   const playList = (n: number) => {
+    const listId = id;
     const listItem = listItems[n];
 
     if (listItem) {
-      const { id, listId, blobUrl } = listItem;
+      const { id, blobUrl } = listItem;
       const audioTag = document.getElementById(
         getRecorderId(listId, id, blobUrl)
       ) as HTMLAudioElement;
@@ -204,28 +208,6 @@ const List = ({
       });
       audioTag.play();
     }
-  };
-
-  const renderCard = (card: ListItem, index: number) => {
-    return (
-      <Card
-        playList={playingList}
-        left={left}
-        top={top}
-        key={card.id}
-        index={index}
-        id={card.id}
-        title={card.title}
-        blobUrl={card.blobUrl}
-        moveCard={moveCard}
-        listId={listId}
-        lists={lists}
-        setLists={setLists}
-        setDisableAll={setDisableAll}
-        fullDisable={fullDisable}
-        socket={socket}
-      />
-    );
   };
 
   return (
@@ -246,7 +228,41 @@ const List = ({
         {listItems.length === 0 ? (
           <div className="dropzone">Drop box here</div>
         ) : (
-          listItems.map((listItem, i) => renderCard(listItem, i))
+          listItems.map((listItem, i) => (
+            <ListItem
+              key={`listKey:${Math.pow(new Date().getDate(), i)}`}
+              boxes={boxes}
+              left={left}
+              top={top}
+              listItemIndex={i}
+              id={listItem.id}
+              title={listItem.title}
+              blobUrl={listItem.blobUrl}
+              moveCard={moveCard}
+              updateBoxes={updateBoxes}
+              isListItem={listItem.isListItem}
+            >
+              <Box
+                box={listItem}
+                deleteBox={deleteBox}
+                fullDisable={fullDisable}
+                boxes={boxes}
+                updateBoxes={updateBoxes}
+              >
+                <Recorder
+                  playList={playingList}
+                  listId={id}
+                  cardId={listItem.id}
+                  onStop={onStop}
+                  blobUrl={listItem.blobUrl}
+                  setDisableAll={setDisableAll}
+                  fullDisable={fullDisable}
+                  socket={socket}
+                  title={listItem.title}
+                />
+              </Box>
+            </ListItem>
+          ))
         )}
       </div>
     </StyledList>

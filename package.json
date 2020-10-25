@@ -4,7 +4,7 @@
   "scripts": {
     "lint": "tsc --noEmit && eslint '*/**/*.{js,jsx,ts,tsx}' --quiet --fix",
     "dev": "webpack-dev-server --config ./webpack.config.js --mode development",
-    "dev:build": "webpack --mode=development --watch",
+    "dev:build": "webpack --mode=development --watch --hot=true",
     "dev:server": "nodemon server/index.js",
     "build": "webpack",
     "start": "node server/index.js"
@@ -41,6 +41,7 @@
     "react-dnd": "^11.0.0",
     "react-dnd-html5-backend": "^11.0.0",
     "react-dom": "^16.13.1",
+    "react-feather": "^2.0.8",
     "react-scripts": "3.4.1",
     "socket.io": "^2.3.0",
     "socket.io-client": "^2.3.0",

@@ -1,29 +1,20 @@
-import React, { Dispatch, SetStateAction } from 'react';
-import cn from 'classnames';
+import React, { useState, useEffect } from 'react';
+import { Check, Edit } from 'react-feather';
 import styled from 'styled-components';
-import { useDrag } from 'react-dnd';
-import { ItemTypes } from './ItemTypes';
+import cn from 'classnames';
+import update from 'immutability-helper';
+import BoxType from './types/box';
 
 interface Props {
-  id: number;
-  left?: number;
-  top?: number;
-  children: React.ReactElement;
-  isList?: boolean;
-  title?: string;
-  setBoxes: Dispatch<
-    SetStateAction<
-      Array<{ id: number; left: number; top: number; title: string }>
-    >
-  >;
-  boxes: Array<{ id: number; left: number; top: number; title: string }>;
-  blobUrl?: string;
+  boxes: Array<BoxType>;
+  box: BoxType;
+  children?: React.ReactElement;
   fullDisable?: boolean;
-  socket?: SocketIOClient.Socket;
+  deleteBox?: Function;
+  updateBoxes: (boxes: Array<BoxType>) => void;
 }
 
 const StyledBox = styled.div`
-  position: absolute;
   border: 1px dashed gray;
   background-color: white;
   cursor: move;
@@ -45,56 +36,65 @@ const StyledBox = styled.div`
 `;
 
 const Box = ({
-  id,
-  left,
-  top,
+  box,
   children,
-  isList,
-  title,
-  setBoxes,
-  boxes,
-  blobUrl,
   fullDisable,
-  socket,
+  deleteBox,
+  boxes,
+  updateBoxes,
 }: Props) => {
-  const [{ isDragging }, drag] = useDrag({
-    item: {
-      id,
-      left,
-      top,
-      title,
-      blobUrl,
-      type: isList ? ItemTypes.LIST : ItemTypes.BOX,
-    },
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
-  });
-  if (isDragging) {
-    return <div ref={drag} />;
-  }
+  const { id, title, type } = box;
+  const [edit, setEdit] = useState(false);
+  const [editedTitle, setEditedTitle] = useState(title);
 
-  const deleteBox = () => {
-    const confirmed = confirm(`Are you sure you want to delete "${title}"?`);
-    if (confirmed) {
-      const newBoxes = boxes.filter((box) => box.id !== id);
-      setBoxes(newBoxes);
-      socket.emit('sendingChanges', {
-        boxes: newBoxes,
+  useEffect(() => {
+    if (!edit && editedTitle !== title) {
+      const cardIndex = boxes.findIndex((box) => box.id === id);
+      const newBoxes = update(boxes, {
+        [cardIndex]: {
+          $set: {
+            ...boxes[cardIndex],
+            title: editedTitle,
+          },
+        },
       });
+      updateBoxes(newBoxes);
     }
-  };
+  }, [edit]);
 
   return (
     <StyledBox
-      ref={drag}
       className={cn({
-        isList,
+        isList: type === 'list',
       })}
-      style={{ left, top } as React.CSSProperties}
     >
+      {!edit ? (
+        <React.Fragment>
+          {title}{' '}
+          <span
+            className="icons"
+            onClick={() => {
+              setEditedTitle(title);
+              setEdit(true);
+            }}
+          >
+            <Edit size={12} />
+          </span>
+        </React.Fragment>
+      ) : (
+        <React.Fragment>
+          <input
+            type="text"
+            value={editedTitle}
+            onChange={(e) => setEditedTitle(e.target.value)}
+          />{' '}
+          <span className="icons" onClick={() => setEdit(false)}>
+            <Check size={12} />
+          </span>
+        </React.Fragment>
+      )}
       <div className="child">{children}</div>
-      <button disabled={fullDisable} onClick={deleteBox}>
+      <button disabled={fullDisable} onClick={() => deleteBox(id)}>
         delete
       </button>
     </StyledBox>
