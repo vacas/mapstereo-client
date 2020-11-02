@@ -151,6 +151,7 @@ const InternalBox = ({
         <Recorder
           fullDisable={fullDisable}
           setDisableAll={setDisableAll}
+          cardId={id}
           onStop={onStop}
           blobUrl={blobUrl}
           socket={socket}

@@ -32,14 +32,6 @@ const StyledList = styled.div`
     width: 400px;
     z-index: 3;
     margin: 10px 0;
-
-    & .dropzone {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 50px;
-      border: 1px dashed black;
-    }
   }
 `;
 

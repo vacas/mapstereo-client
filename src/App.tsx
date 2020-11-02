@@ -58,6 +58,27 @@ const StyledApp = styled.div`
       opacity: 0.5;
     }
   }
+
+  .dropzone {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50px;
+    border: 1px dashed black;
+    position: relative;
+    transition: opacity 500ms;
+
+    &.hovering {
+      opacity: 0.5;
+    }
+
+    & .dropzoneStatus {
+      background-color: rgba(0, 0, 0, 0.5);
+      height: 100%;
+      width: 100%;
+      position: absolute;
+    }
+  }
 `;
 
 /*
@@ -78,7 +99,6 @@ const App = () => {
       alert('User Media API not supported.');
     }
   }, [mediaRecorderIsSupported]);
-
 
   // all socket responses handled here
   useEffect(() => {
@@ -117,7 +137,7 @@ const App = () => {
         id: boxId,
         ...obj,
         title: `box #${boxId}`,
-      }
+      },
     ];
     updateBoxes(newBoxes);
   };

@@ -9,6 +9,8 @@ import React, {
 import cn from 'classnames';
 import styled from 'styled-components';
 import axios from 'axios';
+import Loading from './Loading';
+import RecorderIcon from './RecorderIcon';
 import { getRecorderId } from './helper';
 
 /*
@@ -80,8 +82,10 @@ const Recorder = ({
   setDisableAll,
   playList,
   socket,
-  title
+  title,
 }: Props) => {
+  const [hovering, setHovering] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [loop, setLoop] = useState(false);
   const mediaRecorderOptions = null;
   // for individual recorder components
@@ -151,7 +155,7 @@ const Recorder = ({
     if (blobUrl && mediaBlobUrl !== blobUrl) {
       setMediaBlobUrl(blobUrl);
     }
-  }, [blobUrl])
+  }, [blobUrl]);
 
   const startRecording = async () => {
     setDisableAll(true);
@@ -164,12 +168,12 @@ const Recorder = ({
     if (!mediaStream.current) {
       await getMediaStream();
     }
-    
+
     if (mediaStream.current) {
       mediaRecorder.current = new MediaRecorder(mediaStream.current);
 
       mediaRecorder.current.ondataavailable = onRecordingActive;
-      
+
       mediaRecorder.current.onstop = await onRecordingStop;
       mediaRecorder.current.onerror = () => {
         setError('NO_RECORDER');
@@ -190,16 +194,16 @@ const Recorder = ({
 
     const data = new FormData();
     data.append('soundBlob', blob, `${title}.wav`);
-    
+
     const result = await axios.post('/upload', data, {
-      headers: { "content-type": 'multipart/form-data' }
+      headers: { 'content-type': 'multipart/form-data' },
     });
 
-    const url = result && result.data || '';
-    
-    setStatus('stopped');
+    const url = (result && result.data) || '';
+
     setMediaBlobUrl(url);
     onStop(url, cardId);
+    setStatus('stopped');
   };
 
   const stopRecording = () => {
@@ -238,16 +242,71 @@ const Recorder = ({
         <label htmlFor="loop">Loop</label>
         <input type="checkbox" onClick={() => setLoop(!loop)} />
         <div>
-          <audio
-            id={getRecorderId(listId, cardId, blobUrl)}
-            className={cn({
-              disabled: fullDisable,
-            })}
-            muted={fullDisable}
-            src={mediaBlobUrl}
-            controls
-            loop={loop}
-          />
+          {mediaBlobUrl ? (
+            <audio
+              id={getRecorderId(listId, cardId, blobUrl)}
+              className={cn({
+                disabled: fullDisable,
+              })}
+              muted={fullDisable}
+              src={mediaBlobUrl}
+              controls
+              loop={loop}
+            />
+          ) : (
+            <div
+              onDrop={async (e) => {
+                e.preventDefault();
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                  setLoading(true);
+                  setDisableAll(true);
+                  const data = new FormData();
+                  data.append(
+                    'soundBlob',
+                    e.dataTransfer.files[0],
+                    e.dataTransfer.files[0].name
+                  );
+
+                  const result = await axios.post('/upload', data, {
+                    headers: { 'content-type': 'multipart/form-data' },
+                  });
+
+                  const url = (result && result.data) || '';
+
+                  if (url) {
+                    setMediaBlobUrl(url);
+                    onStop(url, cardId);
+                  }
+
+                  setLoading(false);
+                  setDisableAll(false);
+                }
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                if (!hovering && e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+                  setHovering(true);
+                }
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                if (hovering) {
+                  setHovering(false);
+                }
+              }}
+              className={cn("dropzone", {
+                hovering
+              })}
+            >
+              {(loading || status === 'recording' ) && (
+                <div className="dropzoneStatus">
+                  { status === 'recording' && <RecorderIcon/>}
+                  { loading && <Loading />}
+                </div>
+              )}
+              Drop files here
+            </div>
+          )}
         </div>
         {error && error !== 'NONE' && <span>{error}</span>}
       </div>
