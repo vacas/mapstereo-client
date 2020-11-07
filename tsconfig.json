@@ -3,14 +3,24 @@
     "target": "es6",
     "outDir": "./dist/",
     "module": "commonjs",
-    "jsx": "react",
+    "jsx": "preserve",
     // "sourceMap": true,
     "allowSyntheticDefaultImports": true,
     "allowJs": true,
     "isolatedModules": true,
     "noEmit": true,
     "skipLibCheck": true,
-    "strictFunctionTypes": false
+    "strictFunctionTypes": false,
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "strict": false,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true
   },
   "exclude": [
     "node_modules",
@@ -19,7 +29,7 @@
     "*.js"
   ],
   "include": [
-    "./src/**/*.ts",
-    "./src/**/*.tsx",
+    "**/*.ts",
+    "**/*.tsx"
   ]
 }
