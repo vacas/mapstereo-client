@@ -195,7 +195,7 @@ const Recorder = ({
     const data = new FormData();
     data.append('soundBlob', blob, `${title}.wav`);
 
-    const result = await axios.post('/upload', data, {
+    const result = await axios.post('/api/upload', data, {
       headers: { 'content-type': 'multipart/form-data' },
     });
 
@@ -267,7 +267,7 @@ const Recorder = ({
                     e.dataTransfer.files[0].name
                   );
 
-                  const result = await axios.post('/upload', data, {
+                  const result = await axios.post('/api/upload', data, {
                     headers: { 'content-type': 'multipart/form-data' },
                   });
 

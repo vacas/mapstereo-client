@@ -4,10 +4,9 @@
   "scripts": {
     "lint": "tsc --noEmit && eslint '*/**/*.{js,jsx,ts,tsx}' --quiet --fix",
     "dev": "next dev",
-    "dev:build": "webpack --mode=development --watch --hot=true",
-    "dev:server": "nodemon server/index.js",
-    "build": "webpack",
-    "start": "node server/index.js"
+    "dev:server": "AWS_BUCKET=assets.mapstereo.com node server/index.js",
+    "build": "next build",
+    "start": "NODE_ENV=production node server/index.js"
   },
   "dependencies": {
     "@babel/polyfill": "^7.8.7",
@@ -33,6 +32,7 @@
     "dotenv": "^8.2.0",
     "es7-object-polyfill": "^1.0.1",
     "express": "^4.17.1",
+    "formidable": "^1.2.2",
     "http": "0.0.1-security",
     "immutability-helper": "^3.0.2",
     "lodash": "^4.17.15",
