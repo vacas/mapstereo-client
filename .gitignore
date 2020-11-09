@@ -12,3 +12,5 @@
 .env
 
 npm-debug.log*
+
+/.next
