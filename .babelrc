@@ -1,28 +1,15 @@
 {
-  // "stage": 1,
   "presets": [
-    [
-      "@babel/preset-env",
-      {
-        "modules": false,
-        // "useBuiltIns": "usage",
-        "targets": {
-          "browsers": [
-            ">0.25%",
-            "not op_mini all"
-          ]
-        }
-      }
-    ],
-    "@babel/preset-react",
-    "@babel/preset-typescript"
+    "next/babel"
   ],
   "plugins": [
     "@babel/plugin-proposal-object-rest-spread",
     [
-      "@babel/plugin-transform-runtime",
+      "babel-plugin-styled-components",
       {
-        "regenerator": true
+        "ssr": true,
+        "preprocess": false,
+        "displayName": true
       }
     ]
   ]

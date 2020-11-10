@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import update from 'immutability-helper';
 import socketIOClient from 'socket.io-client';
-import { getCursorElement, supportsMediaRecorder } from './helper';
+import { getCursorElement, supportsMediaRecorder, isServer } from './helper';
 import maxBy from 'lodash/maxBy';
 import DroppableBackground from './DroppableBackground';
 import DraggableItems from './DraggableItems';
 import Box from './types/box';
 
-const socket = socketIOClient(
-  `${process.env.NODE_ENV === 'production' ? 'wss' : 'ws'}://${
-    window.location.host
-  }`,
+const isProduction = process.env.NODE_ENV === 'production' && !isServer && !window.location.hostname.includes('localhost')
+
+const socket = !isServer && socketIOClient(
+  `${isProduction ? 'wss' : 'ws'}://localhost:3000`,
   {
-    secure: process.env.NODE_ENV === 'production',
+    secure: isProduction,
   }
 );
 

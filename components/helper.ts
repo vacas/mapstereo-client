@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import _ from 'lodash';
 
+export const isServer = typeof window === 'undefined';
+
 export const sortById = (a, b) => {
   if (a.id > b.id) {
     return 1;
@@ -14,16 +16,17 @@ export const debounce = (callback: any, timeout: number) => {
 };
 
 const getWidth = () =>
-  window.innerWidth ||
+  !isServer && window.innerWidth ||
   document.documentElement.clientWidth ||
   document.body.clientWidth;
 
 const getHeight = () =>
-  window.innerHeight ||
+  !isServer && window.innerHeight ||
   document.documentElement.clientHeight ||
   document.body.clientHeight;
 
 export const useCurrentWidth = () => {
+  if (isServer) return;
   const [width, setWidth] = useState(getWidth());
 
   useEffect(() => {
@@ -46,6 +49,7 @@ export const useCurrentWidth = () => {
 };
 
 export const useCurrentHeight = () => {
+  if (isServer) return;
   const [height, setheight] = useState(getHeight());
 
   useEffect(() => {
@@ -77,6 +81,7 @@ export const getRecorderId = (
   }${blobUrl}`;
 
   export const supportsMediaRecorder = () => {
+    if (isServer) return;
     const navigator = <any>window.navigator;
 
     return navigator.getUserMedia || navigator.webkitGetUserMedia ||
