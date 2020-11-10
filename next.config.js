@@ -1,6 +1,7 @@
+require('dotenv').config();
+
 module.exports = {
-  webpack: (config, { dev, isServer, webpack }) => {
-  
-    return config;
+  env: {
+    AWS_BUCKET: process.env.AWS_BUCKET
   }
 }

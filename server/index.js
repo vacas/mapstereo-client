@@ -1,4 +1,3 @@
-require('dotenv').config();
 const { createServer } = require('http');
 const { parse } = require('url');
 const next = require('next');
@@ -15,13 +14,9 @@ const PORT = process.env.PORT || 3000;
 
 let currentState = {};
 
-
 app.prepare().then(() => {
   const server = createServer(async (req, res) => {
     const parsedUrl = parse(req.url, true);
-    // const { pathname, query } = parsedUrl;
-
-
 
     handle(req, res, parsedUrl);
   }).listen(PORT, (err) => {
