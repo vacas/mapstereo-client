@@ -10,7 +10,7 @@ import Box from './types/box';
 const isProduction = process.env.NODE_ENV === 'production' && !isServer && !window.location.hostname.includes('localhost')
 
 const socket = !isServer && socketIOClient(
-  `${isProduction ? 'wss' : 'ws'}://${window.location.hostname}`,
+  `${isProduction ? 'wss' : 'ws'}://${window.location.host}`,
   {
     secure: isProduction,
   }
