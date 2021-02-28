@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import ListItem from './ListItem';
 import { ItemTypes } from './ItemTypes';
 import maxBy from 'lodash/maxBy';
-import { getRecorderId } from './helper';
+import { getRecorderId } from '../lib/helper';
 import BoxType from './types/box';
 import update from 'immutability-helper';
 import Recorder from './Recorder';

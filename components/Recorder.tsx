@@ -11,7 +11,7 @@ import styled from 'styled-components';
 import axios from 'axios';
 import Loading from './Loading';
 import RecorderIcon from './RecorderIcon';
-import { getRecorderId } from './helper';
+import { getRecorderId } from '../lib/helper';
 
 /*
   Adaptation of react-media-recorder: https://github.com/0x006F/react-media-recorder/blob/master/src/index.ts

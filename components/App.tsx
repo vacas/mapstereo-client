@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import socketIOClient from 'socket.io-client';
-import { getCursorElement, supportsMediaRecorder, isServer } from './helper';
+import { getCursorElement, supportsMediaRecorder, isServer } from '../lib/helper';
 import maxBy from 'lodash/maxBy';
 import DroppableBackground from './DroppableBackground';
 import DraggableItems from './DraggableItems';
@@ -143,6 +143,7 @@ const App = () => {
 
   const updateBoxes = (updatedBoxes: Array<Box>): void => {
     setBoxes(updatedBoxes);
+    
     socket.emit('sendingChanges', {
       boxes: updatedBoxes,
     });

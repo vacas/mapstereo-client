@@ -1,6 +1,7 @@
 const { createServer } = require('http');
 const { parse } = require('url');
 const next = require('next');
+const mongoose = require('mongoose');
 
 // For Socket.io
 const socketIo = require('socket.io');
@@ -14,7 +15,12 @@ const PORT = process.env.PORT || 3000;
 
 let currentState = {};
 
-app.prepare().then(() => {
+  // if (!mongoose?.connections || mongoose.connections.length === 0 || !mongoose.connections[0].readyState) {
+  //   mongoose.connect('mongodb://localhost:27017/test', {useNewUrlParser: true, useUnifiedTopology: true});
+  // }
+
+
+app.prepare().then(async () => {
   const server = createServer(async (req, res) => {
     const parsedUrl = parse(req.url, true);
 
@@ -45,6 +51,11 @@ app.prepare().then(() => {
         lists: (data && data.lists) || currentState.lists,
         boxes: (data && data.boxes) || currentState.boxes,
       };
+
+      // const currentBoxLength = data?.boxes?.length;
+
+      // const currentBox = new Box(data?.boxes[currentBoxLength - 1]);
+      // currentBox.save().then(() => console.log('box this'));
 
       socket.broadcast.emit('receivingChanges', data);
     });

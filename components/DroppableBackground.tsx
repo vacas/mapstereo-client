@@ -2,8 +2,7 @@ import React, { SetStateAction, Dispatch, useEffect } from 'react';
 import styled from 'styled-components';
 import { useDrop } from 'react-dnd';
 import { ItemTypes } from './ItemTypes';
-import maxBy from 'lodash/maxBy';
-import { useCurrentWidth, useCurrentHeight } from './helper';
+import { useCurrentWidth, useCurrentHeight } from '../lib/helper';
 import BoxType from './types/box';
 import update from 'immutability-helper';
 

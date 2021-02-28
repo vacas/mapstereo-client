@@ -1,3 +1,5 @@
+import { ClientRequest } from 'http';
+import type { NextApiRequest, NextApiResponse } from 'next';
 const S3 = require('aws-sdk/clients/s3');
 const multer = require('multer');
 const upload = multer().single('soundBlob');
@@ -10,8 +12,18 @@ export const config = {
   },
 };
 
+interface FileRequest extends NextApiRequest {
+  file: {
+    buffer: Buffer, 
+    encoding: string, 
+    fieldname: string, 
+    mimetype: string, 
+    originalname: string, 
+    size: number;
+  }
+};
 
-export default async (req, res) => {
+export default async (req: FileRequest, res: NextApiResponse) => {
   if (req.method === 'POST') {
     return upload(req, res, async (err) => {
       try {
@@ -24,7 +36,7 @@ export default async (req, res) => {
           async (err, data) => {
             if (err) {
               console.log('error: ', err);
-              res.sendStatus(404);
+              res.status(404);
             }
 
             res.send(

@@ -4,7 +4,7 @@ type Box = {
   top: number;
   title: string;
   blobUrl?: string;
-  type: string;
+  type: "box" | "card" | "list";
   isListItem?: boolean;
   cards?: Array<number>;
 }
