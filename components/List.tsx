@@ -135,6 +135,8 @@ const List = ({
       return false;
     });
 
+    // vscode://file/./App.tsx:10
+
     const newBoxes = update(boxes, {
       [listIndex]: {
         cards: {

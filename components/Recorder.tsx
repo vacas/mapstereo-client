@@ -12,6 +12,7 @@ import axios from 'axios';
 import Loading from './Loading';
 import RecorderIcon from './RecorderIcon';
 import { getRecorderId } from './helper';
+import { SocketOptions } from 'socket.io-client';
 
 /*
   Adaptation of react-media-recorder: https://github.com/0x006F/react-media-recorder/blob/master/src/index.ts
@@ -51,7 +52,7 @@ interface Props {
   setDisableAll?: Dispatch<SetStateAction<boolean>>;
   fullDisable?: boolean;
   playList?: boolean;
-  socket?: SocketIOClient.Socket;
+  socket?: SocketOptions;
   title?: string;
 }
 
@@ -198,6 +199,8 @@ const Recorder = ({
     const result = await axios.post('/api/upload', data, {
       headers: { 'content-type': 'multipart/form-data' },
     });
+
+    console.log('result',result);
 
     const url = (result && result.data) || '';
 

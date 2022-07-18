@@ -15,22 +15,39 @@ interface Props {
 }
 
 const StyledBox = styled.div`
-  border: 1px dashed gray;
-  background-color: white;
+  color: white;
+  /* border: 1px dashed gray; */
+  background-color: #f2ac52;
+  border-radius: 16px;
+  padding: 18px 26px;
   cursor: move;
-  padding-top: 15px;
+
+  & .boxHeader {
+    font-size: 20px;
+    font-weight: 700;
+    padding-bottom: 15px;
+    border-bottom: 1px solid;
+    margin-bottom: 30px;
+  }
 
   &.isList {
-    padding-top: 0;
+    padding-top: 20px;
+    
   }
 
   & .child {
-    padding: 0.5rem 1rem;
-
     & + button {
       position: absolute;
       top: 0;
       right: 0;
+    }
+  }
+
+  .icons {
+    transition: all 250ms;
+    &:hover {
+      cursor: pointer;
+      opacity: 0.5;
     }
   }
 `;
@@ -69,7 +86,7 @@ const Box = ({
       })}
     >
       {!edit ? (
-        <React.Fragment>
+        <div className="boxHeader">
           {title}{' '}
           <span
             className="icons"
@@ -80,7 +97,7 @@ const Box = ({
           >
             <Edit size={12} />
           </span>
-        </React.Fragment>
+        </div>
       ) : (
         <React.Fragment>
           <input

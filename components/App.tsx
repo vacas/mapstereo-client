@@ -50,14 +50,6 @@ const StyledApp = styled.div`
     color: red;
   }
 
-  .icons {
-    transition: all 250ms;
-    &:hover {
-      cursor: pointer;
-      opacity: 0.5;
-    }
-  }
-
   .dropzone {
     display: flex;
     justify-content: center;

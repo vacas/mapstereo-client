@@ -6,12 +6,13 @@ import Box from './Box';
 import BoxType from './types/box';
 import DraggableContainer from './DraggableContainer';
 import { LOADIPHLPAPI } from 'dns';
+import { SocketOptions } from 'socket.io-client';
 
 interface Props {
   boxes: Array<BoxType>;
   setDisableAll: Dispatch<SetStateAction<boolean>>;
   fullDisable?: boolean;
-  socket?: SocketIOClient.Socket;
+  socket?: SocketOptions;
   updateBoxes?: (boxes: Array<BoxType>) => void;
 
   // current box

@@ -35,8 +35,8 @@ const DraggableContainer = ({
       top,
       title,
       blobUrl,
-      type,
     },
+    type,
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
